@@ -2328,10 +2328,18 @@ void TextEditor::ColorizeInternal()
 						auto from = line.begin() + currentIndex;
 						auto& startStr = mLanguageDefinition.mCommentStart;
 						auto& singleStartStr = mLanguageDefinition.mSingleLineComment;
-
+						auto& singleStartStr2 = mLanguageDefinition.mSingleLineComment2;
+						
 						if (singleStartStr.size() > 0 &&
 							currentIndex + singleStartStr.size() <= line.size() &&
 							equals(singleStartStr.begin(), singleStartStr.end(), from, from + singleStartStr.size(), pred))
+						{
+							withinSingleLineComment = true;
+						} 
+						else
+						if (singleStartStr2.size() > 0 &&
+							currentIndex + singleStartStr2.size() <= line.size() &&
+							equals(singleStartStr2.begin(), singleStartStr2.end(), from, from + singleStartStr2.size(), pred))
 						{
 							withinSingleLineComment = true;
 						}
@@ -3153,6 +3161,42 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::Lua()
 		langDef.mAutoIndentation = false;
 
 		langDef.mName = "Lua";
+
+		inited = true;
+	}
+	return langDef;
+}
+
+const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::JSON()
+{
+	static bool inited = false;
+	static LanguageDefinition langDef;
+	if (!inited)
+	{
+		static const char* const keywords[] = {
+			"true", "false", "null"
+		};
+
+		for (auto& k : keywords)
+			langDef.mKeywords.insert(k);
+			
+		langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("L?\\\"(\\\\.|[^\\\"])*\\\"", PaletteIndex::String));
+		langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("\\\'[^\\\']*\\\'", PaletteIndex::String));
+		langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", PaletteIndex::Number));
+		langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?", PaletteIndex::Number));
+		langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[+-]?[0-9]+[Uu]?[lL]?[lL]?", PaletteIndex::Number));
+		langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[a-zA-Z_][a-zA-Z0-9_]*", PaletteIndex::Identifier));
+		langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", PaletteIndex::Punctuation));
+
+		langDef.mCommentStart = "/*";
+		langDef.mCommentEnd = "*/";
+		langDef.mSingleLineComment = "//";
+		langDef.mSingleLineComment2 = "#";
+		
+		langDef.mCaseSensitive = true;
+		langDef.mAutoIndentation = true;
+
+		langDef.mName = "JSON";
 
 		inited = true;
 	}

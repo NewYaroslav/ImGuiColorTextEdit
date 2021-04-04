@@ -158,7 +158,7 @@ public:
 		Keywords mKeywords;
 		Identifiers mIdentifiers;
 		Identifiers mPreprocIdentifiers;
-		std::string mCommentStart, mCommentEnd, mSingleLineComment;
+		std::string mCommentStart, mCommentEnd, mSingleLineComment, mSingleLineComment2;
 		char mPreprocChar;
 		bool mAutoIndentation;
 
@@ -180,6 +180,7 @@ public:
 		static const LanguageDefinition& SQL();
 		static const LanguageDefinition& AngelScript();
 		static const LanguageDefinition& Lua();
+		static const LanguageDefinition& JSON();
 	};
 
 	TextEditor();
