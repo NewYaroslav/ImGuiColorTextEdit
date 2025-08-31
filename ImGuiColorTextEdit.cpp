@@ -8,7 +8,7 @@
 #include <cmath>
 #include <stack>
 
-#include "TextEditor.h"
+#include "ImGuiColorTextEdit.hpp"
 
 #ifdef max
 	#undef max
