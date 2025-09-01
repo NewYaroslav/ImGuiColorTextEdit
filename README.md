@@ -46,7 +46,7 @@ auto lang = ImTextEdit::JSON();
 editor.SetLanguageDefinition(lang);
 
 // Optional: create a custom color palette based on the dark theme
-ImTextEdit::TextEditor::Palette customPalette = ImTextEdit::TextEditor::GetDarkPalette();
+ImTextEdit::TextEditor::Palette customPalette = ImTextEdit::GetDarkPalette();
 customPalette[(int)ImTextEdit::PaletteIndex::Keyword] = ImVec4(0.86f, 0.40f, 0.24f, 1.0f); // keywords
 customPalette[(int)ImTextEdit::PaletteIndex::String]  = ImVec4(0.90f, 0.76f, 0.18f, 1.0f); // strings
 editor.SetPalette(customPalette);
@@ -109,11 +109,11 @@ editor.SetSelection(ImTextEdit::Coordinates(), ImTextEdit::Coordinates(editor.Ge
 
     if (ImGui::BeginMenu("View")) {
         if (ImGui::MenuItem("Dark palette"))
-            editor.SetPalette(ImTextEdit::TextEditor::GetDarkPalette());
+            editor.SetPalette(ImTextEdit::GetDarkPalette());
         if (ImGui::MenuItem("Light palette"))
-            editor.SetPalette(ImTextEdit::TextEditor::GetLightPalette());
+            editor.SetPalette(ImTextEdit::GetLightPalette());
         if (ImGui::MenuItem("Retro blue palette"))
-            editor.SetPalette(ImTextEdit::TextEditor::GetRetroBluePalette());
+            editor.SetPalette(ImTextEdit::GetRetroBluePalette());
         if (ImGui::MenuItem("Custom palette"))
             editor.SetPalette(customPalette);
         ImGui::EndMenu();

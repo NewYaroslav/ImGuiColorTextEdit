@@ -150,7 +150,7 @@ TextEditor::TextEditor()
     m_shortcuts = GetDefaultShortcuts();
 }
 
-const std::vector<Shortcut> TextEditor::GetDefaultShortcuts()
+const std::vector<Shortcut> GetDefaultShortcuts()
 {
         std::vector<Shortcut> ret;
         ret.resize((int)ShortcutID::Count);
@@ -1458,23 +1458,23 @@ void TextEditor::HandleKeyboardInputs()
                 case ShortcutID::Replace: mFindOpened = mHasSearch; mFindJustOpened = mHasSearch; mReplaceOpened = mHasSearch; break;
                 case ShortcutID::DebugStep:
                     if (OnDebuggerAction)
-                        OnDebuggerAction(this, TextEditor::DebugAction::Step);
+                        OnDebuggerAction(this, DebugAction::Step);
                 break;
                 case ShortcutID::DebugStepInto:
                     if (OnDebuggerAction)
-                        OnDebuggerAction(this, TextEditor::DebugAction::StepInto);
+                        OnDebuggerAction(this, DebugAction::StepInto);
                 break;
                 case ShortcutID::DebugStepOut:
                     if (OnDebuggerAction)
-                        OnDebuggerAction(this, TextEditor::DebugAction::StepOut);
+                        OnDebuggerAction(this, DebugAction::StepOut);
                 break;
                 case ShortcutID::DebugContinue:
                     if (OnDebuggerAction)
-                        OnDebuggerAction(this, TextEditor::DebugAction::Continue);
+                        OnDebuggerAction(this, DebugAction::Continue);
                 break;
                 case ShortcutID::DebugStop:
                     if (OnDebuggerAction)
-                        OnDebuggerAction(this, TextEditor::DebugAction::Stop);
+                        OnDebuggerAction(this, DebugAction::Stop);
                 break;
                 case ShortcutID::DebugJumpHere:
                     if (OnDebuggerJump)
@@ -3706,23 +3706,23 @@ void TextEditor::Render(const char* aTitle, const ImVec2& aSize, bool aBorder)
         ImVec2 dbBarStart = ImGui::GetCursorPos();
 
         if (ImGui::Button(("Step##ted_dbgstep" + std::string(aTitle)).c_str()) && OnDebuggerAction)
-            OnDebuggerAction(this, TextEditor::DebugAction::Step);
+            OnDebuggerAction(this, DebugAction::Step);
         ImGui::SameLine(0, 6);
 
         if (ImGui::Button(("Step In##ted_dbgstepin" + std::string(aTitle)).c_str()) && OnDebuggerAction)
-            OnDebuggerAction(this, TextEditor::DebugAction::StepInto);
+            OnDebuggerAction(this, DebugAction::StepInto);
         ImGui::SameLine(0, 6);
 
         if (ImGui::Button(("Step Out##ted_dbgstepout" + std::string(aTitle)).c_str()) && OnDebuggerAction)
-            OnDebuggerAction(this, TextEditor::DebugAction::StepOut);
+            OnDebuggerAction(this, DebugAction::StepOut);
         ImGui::SameLine(0, 6);
 
         if (ImGui::Button(("Continue##ted_dbgcontinue" + std::string(aTitle)).c_str()) && OnDebuggerAction)
-            OnDebuggerAction(this, TextEditor::DebugAction::Continue);
+            OnDebuggerAction(this, DebugAction::Continue);
         ImGui::SameLine(0, 6);
 
         if (ImGui::Button(("Stop##ted_dbgstop" + std::string(aTitle)).c_str()) && OnDebuggerAction)
-            OnDebuggerAction(this, TextEditor::DebugAction::Stop);
+            OnDebuggerAction(this, DebugAction::Stop);
 
         ImVec2 dbBarEnd = ImGui::GetCursorPos();
         mDebugBarHeight = dbBarEnd.y - dbBarStart.y + ImGui::GetStyle().WindowPadding.y * 2.0f;
@@ -5149,7 +5149,7 @@ std::vector<std::string> TextEditor::GetRelevantExpressions(int line)
     return ret;
 }
 
-const TextEditor::Palette & TextEditor::GetDarkPalette()
+const TextEditor::Palette & GetDarkPalette()
 {
     const static Palette p = { {
         0xff7f7f7f, // Default
@@ -5188,7 +5188,7 @@ const TextEditor::Palette & TextEditor::GetDarkPalette()
     return p;
 }
 
-const TextEditor::Palette & TextEditor::GetLightPalette()
+const TextEditor::Palette & GetLightPalette()
 {
     const static Palette p = { {
         0xff7f7f7f, // None
@@ -5227,7 +5227,7 @@ const TextEditor::Palette & TextEditor::GetLightPalette()
     return p;
 }
 
-const TextEditor::Palette & TextEditor::GetRetroBluePalette()
+const TextEditor::Palette & GetRetroBluePalette()
 {
     const static Palette p = { {
         0xff00ffff, // None
