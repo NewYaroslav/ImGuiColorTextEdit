@@ -58,6 +58,13 @@ The codebase remains a work in progress; please report any issues.
 | CSV       | `const LanguageDefinition& CSV();`      |
 | HTML      | `const LanguageDefinition& HTML();`     |
 | CSS       | `const LanguageDefinition& CSS();`      |
+| CMake   | `const LanguageDefinition& CMake();` |
+| YAML    | `const LanguageDefinition& YAML();`  |
+| TOML    | `const LanguageDefinition& TOML();`  |
+| INI     | `const LanguageDefinition& INI();`   |
+| Dockerfile | `const LanguageDefinition& Dockerfile();` |
+| Diff    | `const LanguageDefinition& Diff();`  |
+| Bash        | `const LanguageDefinition& Bash();`    |
 
 # JSON editor example
 

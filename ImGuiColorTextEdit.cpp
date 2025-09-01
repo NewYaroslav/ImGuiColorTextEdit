@@ -7156,4 +7156,349 @@ const LanguageDefinition& CSS() {
     return langDef;
 }
 
+const LanguageDefinition& CMake() {
+    static bool inited = false;
+    static LanguageDefinition langDef;
+    if (!inited) {
+        // Commands (subset)
+        const char* cmds[] = {
+            "cmake_minimum_required","project","add_executable","add_library",
+            "target_link_libraries","target_include_directories","target_compile_definitions",
+            "target_compile_options","target_sources","set","option","if","elseif","else","endif",
+            "foreach","endforeach","while","endwhile","function","endfunction","macro","endmacro",
+            "message","include","find_package","find_program","find_library","find_path","find_file",
+            "add_custom_command","add_custom_target","add_subdirectory","install","set_property",
+            "get_property","configure_file","enable_language","list","string","file"
+        };
+        for (auto* c : cmds) langDef.mKeywords.insert(c);
+
+        // ${VAR}
+        langDef.mTokenRegexStrings.emplace_back(
+            R"(\$\{[A-Za-z_][A-Za-z0-9_]*\})", PaletteIndex::Preprocessor);
+
+        // "string"
+        langDef.mTokenRegexStrings.emplace_back(
+            R"("([^"\\]|\\.)*")", PaletteIndex::String);
+
+        // Numbers
+        langDef.mTokenRegexStrings.emplace_back(
+            R"([+-]?((\d+(\.\d*)?)|(\.\d+)))", PaletteIndex::Number);
+
+        // Identifiers (targets, variables-as-words)
+        langDef.mTokenRegexStrings.emplace_back(
+            R"([A-Za-z_][A-Za-z0-9_:-]*)", PaletteIndex::Identifier);
+
+        // Punctuation
+        langDef.mTokenRegexStrings.emplace_back(
+            R"([()\{\},;=])", PaletteIndex::Punctuation);
+
+        // Comments
+        langDef.single_line_comments.emplace_back("#");
+
+        langDef.mCaseSensitive   = true;
+        langDef.mAutoIndentation = true;
+        langDef.mName            = "CMake";
+        inited = true;
+    }
+    return langDef;
+}
+
+const LanguageDefinition& YAML() {
+    static bool inited = false;
+    static LanguageDefinition langDef;
+    if (!inited) {
+        // Strings
+        langDef.mTokenRegexStrings.emplace_back(
+            R"("([^"\\]|\\.)*")", PaletteIndex::String);
+        langDef.mTokenRegexStrings.emplace_back(
+            R"('([^'\\]|\\.)*')", PaletteIndex::String);
+
+        // Booleans/null (lowercase variants)
+        langDef.mTokenRegexStrings.emplace_back(
+            R"(\b(true|false|yes|no|on|off|null|~)\b)", PaletteIndex::KnownIdentifier);
+
+        // Numbers (decimal)
+        langDef.mTokenRegexStrings.emplace_back(
+            R"([+-]?((\d+(\.\d*)?)|(\.\d+))([eE][+-]?\d+)?)", PaletteIndex::Number);
+
+        // Anchors & aliases: &name, *name
+        langDef.mTokenRegexStrings.emplace_back(
+            R"([&\*][A-Za-z0-9_-]+)", PaletteIndex::Preprocessor);
+
+        // Tags: !!type, !Tag, !<uri>
+        langDef.mTokenRegexStrings.emplace_back(
+            R"(!<!?[^>\s]+>|!![^\s]+|![^\s]+)", PaletteIndex::Preprocessor);
+
+        // Document markers and block scalars
+        langDef.mTokenRegexStrings.emplace_back(
+            R"((---|\.\.\.|\||>))", PaletteIndex::Preprocessor);
+
+        // Words (keys/values fallback)
+        langDef.mTokenRegexStrings.emplace_back(
+            R"([A-Za-z_][A-Za-z0-9_\-]*)", PaletteIndex::Identifier);
+
+        // Punctuation
+        langDef.mTokenRegexStrings.emplace_back(
+            R"([\-\?\:\,\{\}\[\]])", PaletteIndex::Punctuation);
+
+        // Comments
+        langDef.single_line_comments.emplace_back("#");
+
+        langDef.mCaseSensitive   = true;
+        langDef.mAutoIndentation = true;
+        langDef.mName            = "YAML";
+        inited = true;
+    }
+    return langDef;
+}
+
+const LanguageDefinition& TOML() {
+    static bool inited = false;
+    static LanguageDefinition langDef;
+    if (!inited) {
+        // Booleans
+        langDef.mKeywords.insert("true");
+        langDef.mKeywords.insert("false");
+
+        // Strings (basic and literal). Multiline variants are approximated.
+        langDef.mTokenRegexStrings.emplace_back(
+            R"("([^"\\]|\\.)*")", PaletteIndex::String);
+        langDef.mTokenRegexStrings.emplace_back(
+            R"('([^'\\]|\\.)*')", PaletteIndex::String);
+        // Optional multiline (may rely on lazy quantifiers support)
+        langDef.mTokenRegexStrings.emplace_back(
+            R"("""[\s\S]*?""")", PaletteIndex::String);
+        langDef.mTokenRegexStrings.emplace_back(
+            R"('''[\s\S]*?''')", PaletteIndex::String);
+
+        // Date-time (RFC3339-ish)
+        langDef.mTokenRegexStrings.emplace_back(
+            R"(\d{4}-\d{2}-\d{2}([Tt ]\d{2}:\d{2}:\d{2}(\.\d+)?([Zz]|[+-]\d{2}:\d{2}))?)",
+            PaletteIndex::Number);
+
+        // Numbers: decimal with underscores; hex/oct/bin
+        langDef.mTokenRegexStrings.emplace_back(
+            R"([+-]?\d(?:_?\d)*(?:\.\d(?:_?\d)*)?(?:[eE][+-]?\d+)?)", PaletteIndex::Number);
+        langDef.mTokenRegexStrings.emplace_back(
+            R"([+-]?0[xX][0-9A-Fa-f](?:_?[0-9A-Fa-f])*)", PaletteIndex::Number);
+        langDef.mTokenRegexStrings.emplace_back(
+            R"([+-]?0[oO][0-7](?:_?[0-7])*)", PaletteIndex::Number);
+        langDef.mTokenRegexStrings.emplace_back(
+            R"([+-]?0[bB][01](?:_?[01])*)", PaletteIndex::Number);
+
+        // Keys (bare)
+        langDef.mTokenRegexStrings.emplace_back(
+            R"([A-Za-z0-9_-]+)", PaletteIndex::Identifier);
+
+        // Punctuation (tables/arrays/inline tables)
+        langDef.mTokenRegexStrings.emplace_back(
+            R"([\.\[\]\{\},=])", PaletteIndex::Punctuation);
+
+        // Comments
+        langDef.single_line_comments.emplace_back("#");
+
+        langDef.mCaseSensitive   = true;
+        langDef.mAutoIndentation = true;
+        langDef.mName            = "TOML";
+        inited = true;
+    }
+    return langDef;
+}
+
+const LanguageDefinition& INI() {
+    static bool inited = false;
+    static LanguageDefinition langDef;
+    if (!inited) {
+        // Sections: [section]
+        langDef.mTokenRegexStrings.emplace_back(
+            R"(\[[A-Za-z0-9_.:\- ]+\])", PaletteIndex::Preprocessor);
+
+        // Keys (identifiers) and '='
+        langDef.mTokenRegexStrings.emplace_back(
+            R"([A-Za-z_][A-Za-z0-9_.-]*)", PaletteIndex::Identifier);
+        langDef.mTokenRegexStrings.emplace_back(
+            R"(=)", PaletteIndex::Punctuation);
+
+        // Quoted values
+        langDef.mTokenRegexStrings.emplace_back(
+            R"("([^"\\]|\\.)*")", PaletteIndex::String);
+        langDef.mTokenRegexStrings.emplace_back(
+            R"('([^'\\]|\\.)*')", PaletteIndex::String);
+
+        // Booleans/null (common INI dialects)
+        langDef.mTokenRegexStrings.emplace_back(
+            R"(\b(true|false|yes|no|on|off|null|none)\b)", PaletteIndex::KnownIdentifier);
+
+        // Numbers
+        langDef.mTokenRegexStrings.emplace_back(
+            R"([+-]?((\d+(\.\d*)?)|(\.\d+))([eE][+-]?\d+)?)", PaletteIndex::Number);
+
+        // Comments
+        langDef.single_line_comments.emplace_back(";");
+        langDef.single_line_comments.emplace_back("#");
+
+        langDef.mCaseSensitive   = false;
+        langDef.mAutoIndentation = false;
+        langDef.mName            = "INI";
+        inited = true;
+    }
+    return langDef;
+}
+
+const LanguageDefinition& Dockerfile() {
+    static bool inited = false;
+    static LanguageDefinition langDef;
+    if (!inited) {
+        // Core instructions (upper- or lower-case in practice, we keep case-sensitive true)
+        const char* kw[] = {
+            "FROM","RUN","CMD","ENTRYPOINT","COPY","ADD","WORKDIR","ENV","ARG","EXPOSE",
+            "VOLUME","USER","STOPSIGNAL","HEALTHCHECK","SHELL","ONBUILD","LABEL","MAINTAINER"
+        };
+        for (auto* s : kw) langDef.mKeywords.insert(s);
+
+        // JSON strings in CMD/ENTRYPOINT or labels
+        langDef.mTokenRegexStrings.emplace_back(
+            R"("([^"\\]|\\.)*")", PaletteIndex::String);
+        langDef.mTokenRegexStrings.emplace_back(
+            R"('([^'\\]|\\.)*')", PaletteIndex::String);
+
+        // Variables ${VAR} and $VAR
+        langDef.mTokenRegexStrings.emplace_back(
+            R"(\$\{[A-Za-z_][A-Za-z0-9_]*\})", PaletteIndex::Preprocessor);
+        langDef.mTokenRegexStrings.emplace_back(
+            R"(\$[A-Za-z_][A-Za-z0-9_]*)", PaletteIndex::Preprocessor);
+
+        // Flags: --flag or --flag=value
+        langDef.mTokenRegexStrings.emplace_back(
+            R"(--[A-Za-z0-9_-]+(=[^\s]+)?)", PaletteIndex::KnownIdentifier);
+
+        // Paths / punctuation / arrays
+        langDef.mTokenRegexStrings.emplace_back(
+            R"([{}\[\]:,=])", PaletteIndex::Punctuation);
+
+        // Numbers (ports, etc.)
+        langDef.mTokenRegexStrings.emplace_back(
+            R"([+-]?\d+)", PaletteIndex::Number);
+
+        // Comments and special front-matter (# syntax=, # escape=)
+        langDef.single_line_comments.emplace_back("#");
+
+        langDef.mCaseSensitive   = true;
+        langDef.mAutoIndentation = true;
+        langDef.mName            = "Dockerfile";
+        inited = true;
+    }
+    return langDef;
+}
+
+const LanguageDefinition& Diff() {
+    static bool inited = false;
+    static LanguageDefinition langDef;
+    if (!inited) {
+        // Headers
+        langDef.mTokenRegexStrings.emplace_back(
+            R"(^(diff\s--git.*|index\s[0-9a-f]+\.\.[0-9a-f]+.*|---\s.*|\+\+\+\s.*))",
+            PaletteIndex::Preprocessor);
+
+        // Hunk header: @@ -a,b +c,d @@ optional text
+        langDef.mTokenRegexStrings.emplace_back(
+            R"(^@@\s[-+][0-9]+(,[0-9]+)?\s[-+][0-9]+(,[0-9]+)?\s@@.*$)",
+            PaletteIndex::Preprocessor);
+
+        // Added/removed/context lines
+        langDef.mTokenRegexStrings.emplace_back(
+            R"(^\+.*$)", PaletteIndex::KnownIdentifier); // additions (green-ish in many palettes)
+        langDef.mTokenRegexStrings.emplace_back(
+            R"(^-.*$)", PaletteIndex::ErrorMarker);      // deletions (red)
+        langDef.mTokenRegexStrings.emplace_back(
+            R"(^\s.*$)", PaletteIndex::Comment);         // context
+
+        // Filenames/paths (fallback)
+        langDef.mTokenRegexStrings.emplace_back(
+            R"([A-Za-z0-9_\-./]+)", PaletteIndex::Identifier);
+
+        // Numbers (ranges, modes)
+        langDef.mTokenRegexStrings.emplace_back(
+            R"(\b\d+\b)", PaletteIndex::Number);
+
+        // Punctuation
+        langDef.mTokenRegexStrings.emplace_back(
+            R"([@:,+\-])", PaletteIndex::Punctuation);
+
+        // Diff files are line-oriented; keep indentation simple
+        langDef.mCaseSensitive   = true;
+        langDef.mAutoIndentation = false;
+        langDef.mName            = "Diff";
+        inited = true;
+    }
+    return langDef;
+}
+
+const LanguageDefinition& Bash() {
+    static bool inited = false;
+    static LanguageDefinition langDef;
+    if (!inited) {
+        // Keywords (subset)
+        const char* kw[] = {
+            "if","then","else","elif","fi","for","while","until","do","done","case","esac",
+            "function","select","in","time","coproc"
+        };
+        for (auto* s : kw) langDef.mKeywords.insert(s);
+
+        // Builtins (subset)
+        const char* bi[] = {
+            "echo","printf","read","cd","pwd","pushd","popd","alias","unalias","type",
+            "hash","export","declare","typeset","local","readonly","return","break",
+            "continue","shift","getopts","eval","exec","set","unset","source",".","trap","umask"
+        };
+        for (auto* s : bi) langDef.mKeywords.insert(s);
+
+        // Strings
+        langDef.mTokenRegexStrings.emplace_back(
+            R"("([^"\\]|\\.)*")", PaletteIndex::String);
+        langDef.mTokenRegexStrings.emplace_back(
+            R"('([^'\\]|\\.)*')", PaletteIndex::String);
+        // Command substitution: $( ... ) and backticks
+        langDef.mTokenRegexStrings.emplace_back(
+            R"(\$\([^()]*\))", PaletteIndex::String);
+        langDef.mTokenRegexStrings.emplace_back(
+            R"(`[^`]*`)", PaletteIndex::String);
+
+        // Variables: $VAR, ${VAR}, positional $1, special $?, $#, $@
+        langDef.mTokenRegexStrings.emplace_back(
+            R"(\$\{[A-Za-z_][A-Za-z0-9_]*\})", PaletteIndex::Preprocessor);
+        langDef.mTokenRegexStrings.emplace_back(
+            R"(\$[A-Za-z_][A-Za-z0-9_]*)", PaletteIndex::Preprocessor);
+        langDef.mTokenRegexStrings.emplace_back(
+            R"(\$[0-9]+|\$\?|\$\#|\$\*|\$\@|\$\$|\$_)", PaletteIndex::Preprocessor);
+
+        // Operators / pipelines / redirections
+        langDef.mTokenRegexStrings.emplace_back(
+            R"(&&|\|\||\|{1,2}|;{1,2}|&)", PaletteIndex::Punctuation);
+        langDef.mTokenRegexStrings.emplace_back(
+            R"((?:\d*)?(?:>>?|<<?|<>&|>&|>\|))", PaletteIndex::Punctuation);
+
+        // Here-doc markers: <<WORD or <<-WORD
+        langDef.mTokenRegexStrings.emplace_back(
+            R"(<<-?\s*[A-Za-z_][A-Za-z0-9_]*)", PaletteIndex::Preprocessor);
+
+        // Numbers
+        langDef.mTokenRegexStrings.emplace_back(
+            R"([+-]?((\d+(\.\d*)?)|(\.\d+))([eE][+-]?\d+)?)", PaletteIndex::Number);
+
+        // Identifiers / commands
+        langDef.mTokenRegexStrings.emplace_back(
+            R"([A-Za-z_./-][A-Za-z0-9_./-]*)", PaletteIndex::Identifier);
+
+        // Comments
+        langDef.single_line_comments.emplace_back("#");
+
+        langDef.mCaseSensitive   = true;
+        langDef.mAutoIndentation = true;
+        langDef.mName            = "Bash";
+        inited = true;
+    }
+    return langDef;
+}
+
 } // namespace ImTextEdit

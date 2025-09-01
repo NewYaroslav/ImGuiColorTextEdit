@@ -284,6 +284,29 @@ namespace ImTextEdit {
     
     /// \brief CSS language definition.
     const LanguageDefinition& CSS();
+    
+    /// \brief CMake language definition.
+    /// Highlights common commands, variables ${...}, strings, comments.
+    const LanguageDefinition& CMake();
+    
+    /// \brief YAML language definition (coarse tokenization).
+    /// Notes: indentation-sensitive grammar is not modeled; tokens only.
+    const LanguageDefinition& YAML();
+    
+    /// \brief TOML language definition (1.0-ish, coarse).
+    const LanguageDefinition& TOML();
+    
+    /// \brief INI language definition: [section], key=value, ;/# comments.
+    const LanguageDefinition& INI();
+    
+    /// \brief Dockerfile language definition.
+    const LanguageDefinition& Dockerfile();
+    
+    /// \brief Diff/patch language definition (unified diff).
+    const LanguageDefinition& Diff();
+    
+    /// \brief Bash / POSIX shell language definition.
+    const LanguageDefinition& Bash();
 
     enum class DebugAction
     {
