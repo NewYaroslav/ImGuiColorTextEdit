@@ -32,6 +32,8 @@
 // TODO
 // - multiline comments vs single-line: latter is blocking start of a ML
 
+namespace ImTextEdit {
+
 template<class InputIt1, class InputIt2, class BinaryPredicate>
 bool equals(InputIt1 first1, InputIt1 last1,
     InputIt2 first2, InputIt2 last2, BinaryPredicate p)
@@ -142,135 +144,135 @@ TextEditor::TextEditor()
     mDebugBarHeight = 0.0f;
 
     SetPalette(GetDarkPalette());
-    SetLanguageDefinition(LanguageDefinition::HLSL());
+    SetLanguageDefinition(HLSL());
     mLines.push_back(Line());
 
     m_shortcuts = GetDefaultShortcuts();
 }
 
-const std::vector<TextEditor::Shortcut> TextEditor::GetDefaultShortcuts()
+const std::vector<Shortcut> TextEditor::GetDefaultShortcuts()
 {
-        std::vector<TextEditor::Shortcut> ret;
-        ret.resize((int)TextEditor::ShortcutID::Count);
+        std::vector<Shortcut> ret;
+        ret.resize((int)ShortcutID::Count);
 
 #if IMGUICTE_USE_SDL2
-        ret[(int)TextEditor::ShortcutID::Undo] = TextEditor::Shortcut(SDLK_z, -1, 0, 1, 0); // CTRL+Z
-        ret[(int)TextEditor::ShortcutID::Redo] = TextEditor::Shortcut(SDLK_y, -1, 0, 1, 0); // CTRL+Y
-        ret[(int)TextEditor::ShortcutID::MoveUp] = TextEditor::Shortcut(SDLK_UP, -1, 0, 0, 0); // UP ARROW
-        ret[(int)TextEditor::ShortcutID::SelectUp] = TextEditor::Shortcut(SDLK_UP, -1, 0, 0, 1); // SHIFT + UP ARROW
-        ret[(int)TextEditor::ShortcutID::MoveDown] = TextEditor::Shortcut(SDLK_DOWN, -1, 0, 0, 0); // DOWN ARROW
-        ret[(int)TextEditor::ShortcutID::SelectDown] = TextEditor::Shortcut(SDLK_DOWN, -1, 0, 0, 1); // SHIFT + DOWN ARROW
-        ret[(int)TextEditor::ShortcutID::MoveLeft] = TextEditor::Shortcut(SDLK_LEFT, -1, 0, 0, 0); // LEFT ARROW (+ SHIFT/CTRL)
-        ret[(int)TextEditor::ShortcutID::SelectLeft] = TextEditor::Shortcut(SDLK_LEFT, -1, 0, 0, 1); // SHIFT + LEFT ARROW
-        ret[(int)TextEditor::ShortcutID::MoveWordLeft] = TextEditor::Shortcut(SDLK_LEFT, -1, 0, 1, 0); // CTRL + LEFT ARROW
-        ret[(int)TextEditor::ShortcutID::SelectWordLeft] = TextEditor::Shortcut(SDLK_LEFT, -1, 0, 1, 1); // CTRL + SHIFT + LEFT ARROW
-        ret[(int)TextEditor::ShortcutID::MoveRight] = TextEditor::Shortcut(SDLK_RIGHT, -1, 0, 0, 0); // RIGHT ARROW
-        ret[(int)TextEditor::ShortcutID::SelectRight] = TextEditor::Shortcut(SDLK_RIGHT, -1, 0, 0, 1); // SHIFT + RIGHT ARROW
-        ret[(int)TextEditor::ShortcutID::MoveWordRight] = TextEditor::Shortcut(SDLK_RIGHT, -1, 0, 1, 0); // CTRL + RIGHT ARROW
-        ret[(int)TextEditor::ShortcutID::SelectWordRight] = TextEditor::Shortcut(SDLK_RIGHT, -1, 0, 1, 1); // CTRL + SHIFT + RIGHT ARROW
-        ret[(int)TextEditor::ShortcutID::MoveUpBlock] = TextEditor::Shortcut(SDLK_PAGEUP, -1, 0, 0, 0); // PAGE UP
-        ret[(int)TextEditor::ShortcutID::SelectUpBlock] = TextEditor::Shortcut(SDLK_PAGEUP, -1, 0, 0, 1); // SHIFT + PAGE UP
-        ret[(int)TextEditor::ShortcutID::MoveDownBlock] = TextEditor::Shortcut(SDLK_PAGEDOWN, -1, 0, 0, 0); // PAGE DOWN
-        ret[(int)TextEditor::ShortcutID::SelectDownBlock] = TextEditor::Shortcut(SDLK_PAGEDOWN, -1, 0, 0, 1); // SHIFT + PAGE DOWN
-        ret[(int)TextEditor::ShortcutID::MoveTop] = TextEditor::Shortcut(SDLK_HOME, -1, 0, 1, 0); // CTRL + HOME
-        ret[(int)TextEditor::ShortcutID::SelectTop] = TextEditor::Shortcut(SDLK_HOME, -1, 0, 1, 1); // CTRL + SHIFT + HOME
-        ret[(int)TextEditor::ShortcutID::MoveBottom] = TextEditor::Shortcut(SDLK_END, -1, 0, 1, 0); // CTRL + END
-        ret[(int)TextEditor::ShortcutID::SelectBottom] = TextEditor::Shortcut(SDLK_END, -1, 0, 1, 1); // CTRL + SHIFT + END
-        ret[(int)TextEditor::ShortcutID::MoveStartLine] = TextEditor::Shortcut(SDLK_HOME, -1, 0, 0, 0); // HOME
-        ret[(int)TextEditor::ShortcutID::SelectStartLine] = TextEditor::Shortcut(SDLK_HOME, -1, 0, 0, 1); // SHIFT + HOME
-        ret[(int)TextEditor::ShortcutID::MoveEndLine] = TextEditor::Shortcut(SDLK_END, -1, 0, 0, 0); // END
-        ret[(int)TextEditor::ShortcutID::SelectEndLine] = TextEditor::Shortcut(SDLK_END, -1, 0, 0, 1); // SHIFT + END
-        ret[(int)TextEditor::ShortcutID::ForwardDelete] = TextEditor::Shortcut(SDLK_DELETE, -1, 0, 0, 0); // DELETE
-        ret[(int)TextEditor::ShortcutID::ForwardDeleteWord] = TextEditor::Shortcut(SDLK_DELETE, -1, 0, 1, 0); // CTRL + DELETE
-        ret[(int)TextEditor::ShortcutID::DeleteRight] = TextEditor::Shortcut(SDLK_DELETE, -1, 0, 0, 1); // SHIFT+BACKSPACE
-        ret[(int)TextEditor::ShortcutID::BackwardDelete] = TextEditor::Shortcut(SDLK_BACKSPACE, -1, 0, 0, 0); // BACKSPACE
-        ret[(int)TextEditor::ShortcutID::BackwardDeleteWord] = TextEditor::Shortcut(SDLK_BACKSPACE, -1, 0, 1, 0); // CTRL + BACKSPACE
-        ret[(int)TextEditor::ShortcutID::DeleteLeft] = TextEditor::Shortcut(SDLK_BACKSPACE, -1, 0, 0, 1); // SHIFT+BACKSPACE
-        ret[(int)TextEditor::ShortcutID::OverwriteCursor] = TextEditor::Shortcut(SDLK_INSERT, -1, 0, 0, 0); // INSERT
-        ret[(int)TextEditor::ShortcutID::Copy] = TextEditor::Shortcut(SDLK_c, -1, 0, 1, 0); // CTRL+C
-        ret[(int)TextEditor::ShortcutID::Paste] = TextEditor::Shortcut(SDLK_v, -1, 0, 1, 0); // CTRL+V
-        ret[(int)TextEditor::ShortcutID::Cut] = TextEditor::Shortcut(SDLK_x, -1, 0, 1, 0); // CTRL+X
-        ret[(int)TextEditor::ShortcutID::SelectAll] = TextEditor::Shortcut(SDLK_a, -1, 0, 1, 0); // CTRL+A
-        ret[(int)TextEditor::ShortcutID::AutocompleteOpen] = TextEditor::Shortcut(SDLK_SPACE, -1, 0, 1, 0); // CTRL+SPACE
-        ret[(int)TextEditor::ShortcutID::AutocompleteSelect] = TextEditor::Shortcut(SDLK_TAB, -1, 0, 0, 0); // TAB
-        ret[(int)TextEditor::ShortcutID::AutocompleteSelectActive] = TextEditor::Shortcut(SDLK_RETURN, -1, 0, 0, 0); // RETURN
-        ret[(int)TextEditor::ShortcutID::AutocompleteUp] = TextEditor::Shortcut(SDLK_UP, -1, 0, 0, 0); // UP ARROW
-        ret[(int)TextEditor::ShortcutID::AutocompleteDown] = TextEditor::Shortcut(SDLK_DOWN, -1, 0, 0, 0); // DOWN ARROW
-        ret[(int)TextEditor::ShortcutID::NewLine] = TextEditor::Shortcut(SDLK_RETURN, -1, 0, 0, 0); // RETURN
-        ret[(int)TextEditor::ShortcutID::Indent] = TextEditor::Shortcut(SDLK_TAB, -1, 0, 0, 0); // TAB
-        ret[(int)TextEditor::ShortcutID::Unindent] = TextEditor::Shortcut(SDLK_TAB, -1, 0, 0, 1); // SHIFT + TAB
-        ret[(int)TextEditor::ShortcutID::Find] = TextEditor::Shortcut(SDLK_f, -1, 0, 1, 0); // CTRL+F
-        ret[(int)TextEditor::ShortcutID::Replace] = TextEditor::Shortcut(SDLK_h, -1, 0, 1, 0); // CTRL+H
-        ret[(int)TextEditor::ShortcutID::FindNext] = TextEditor::Shortcut(SDLK_F3, -1, 0, 0, 0); // F3
-        ret[(int)TextEditor::ShortcutID::DebugStep] = TextEditor::Shortcut(SDLK_F10, -1, 0, 0, 0); // F10
-        ret[(int)TextEditor::ShortcutID::DebugStepInto] = TextEditor::Shortcut(SDLK_F11, -1, 0, 0, 0); // F11
-        ret[(int)TextEditor::ShortcutID::DebugStepOut] = TextEditor::Shortcut(SDLK_F11, -1, 0, 0, 1); // SHIFT+F11
-        ret[(int)TextEditor::ShortcutID::DebugContinue] = TextEditor::Shortcut(SDLK_F5, -1, 0, 0, 0); // F5
-        ret[(int)TextEditor::ShortcutID::DebugStop] = TextEditor::Shortcut(SDLK_F5, -1, 0, 0, 1); // SHIFT+F5
-        ret[(int)TextEditor::ShortcutID::DebugBreakpoint] = TextEditor::Shortcut(SDLK_F9, -1, 0, 0, 0); // F9
-        ret[(int)TextEditor::ShortcutID::DebugJumpHere] = TextEditor::Shortcut(SDLK_h, -1, 1, 1, 0); // CTRL+ALT+H
-        ret[(int)TextEditor::ShortcutID::DuplicateLine] = TextEditor::Shortcut(SDLK_d, -1, 0, 1, 0);    // CTRL+D
-        ret[(int)TextEditor::ShortcutID::CommentLines] = TextEditor::Shortcut(SDLK_k, -1, 0, 1, 1); // CTRL+SHIFT+K
-        ret[(int)TextEditor::ShortcutID::UncommentLines] = TextEditor::Shortcut(SDLK_u, -1, 0, 1, 1); // CTRL+SHIFT+U
+        ret[(int)ShortcutID::Undo] = Shortcut(SDLK_z, -1, 0, 1, 0); // CTRL+Z
+        ret[(int)ShortcutID::Redo] = Shortcut(SDLK_y, -1, 0, 1, 0); // CTRL+Y
+        ret[(int)ShortcutID::MoveUp] = Shortcut(SDLK_UP, -1, 0, 0, 0); // UP ARROW
+        ret[(int)ShortcutID::SelectUp] = Shortcut(SDLK_UP, -1, 0, 0, 1); // SHIFT + UP ARROW
+        ret[(int)ShortcutID::MoveDown] = Shortcut(SDLK_DOWN, -1, 0, 0, 0); // DOWN ARROW
+        ret[(int)ShortcutID::SelectDown] = Shortcut(SDLK_DOWN, -1, 0, 0, 1); // SHIFT + DOWN ARROW
+        ret[(int)ShortcutID::MoveLeft] = Shortcut(SDLK_LEFT, -1, 0, 0, 0); // LEFT ARROW (+ SHIFT/CTRL)
+        ret[(int)ShortcutID::SelectLeft] = Shortcut(SDLK_LEFT, -1, 0, 0, 1); // SHIFT + LEFT ARROW
+        ret[(int)ShortcutID::MoveWordLeft] = Shortcut(SDLK_LEFT, -1, 0, 1, 0); // CTRL + LEFT ARROW
+        ret[(int)ShortcutID::SelectWordLeft] = Shortcut(SDLK_LEFT, -1, 0, 1, 1); // CTRL + SHIFT + LEFT ARROW
+        ret[(int)ShortcutID::MoveRight] = Shortcut(SDLK_RIGHT, -1, 0, 0, 0); // RIGHT ARROW
+        ret[(int)ShortcutID::SelectRight] = Shortcut(SDLK_RIGHT, -1, 0, 0, 1); // SHIFT + RIGHT ARROW
+        ret[(int)ShortcutID::MoveWordRight] = Shortcut(SDLK_RIGHT, -1, 0, 1, 0); // CTRL + RIGHT ARROW
+        ret[(int)ShortcutID::SelectWordRight] = Shortcut(SDLK_RIGHT, -1, 0, 1, 1); // CTRL + SHIFT + RIGHT ARROW
+        ret[(int)ShortcutID::MoveUpBlock] = Shortcut(SDLK_PAGEUP, -1, 0, 0, 0); // PAGE UP
+        ret[(int)ShortcutID::SelectUpBlock] = Shortcut(SDLK_PAGEUP, -1, 0, 0, 1); // SHIFT + PAGE UP
+        ret[(int)ShortcutID::MoveDownBlock] = Shortcut(SDLK_PAGEDOWN, -1, 0, 0, 0); // PAGE DOWN
+        ret[(int)ShortcutID::SelectDownBlock] = Shortcut(SDLK_PAGEDOWN, -1, 0, 0, 1); // SHIFT + PAGE DOWN
+        ret[(int)ShortcutID::MoveTop] = Shortcut(SDLK_HOME, -1, 0, 1, 0); // CTRL + HOME
+        ret[(int)ShortcutID::SelectTop] = Shortcut(SDLK_HOME, -1, 0, 1, 1); // CTRL + SHIFT + HOME
+        ret[(int)ShortcutID::MoveBottom] = Shortcut(SDLK_END, -1, 0, 1, 0); // CTRL + END
+        ret[(int)ShortcutID::SelectBottom] = Shortcut(SDLK_END, -1, 0, 1, 1); // CTRL + SHIFT + END
+        ret[(int)ShortcutID::MoveStartLine] = Shortcut(SDLK_HOME, -1, 0, 0, 0); // HOME
+        ret[(int)ShortcutID::SelectStartLine] = Shortcut(SDLK_HOME, -1, 0, 0, 1); // SHIFT + HOME
+        ret[(int)ShortcutID::MoveEndLine] = Shortcut(SDLK_END, -1, 0, 0, 0); // END
+        ret[(int)ShortcutID::SelectEndLine] = Shortcut(SDLK_END, -1, 0, 0, 1); // SHIFT + END
+        ret[(int)ShortcutID::ForwardDelete] = Shortcut(SDLK_DELETE, -1, 0, 0, 0); // DELETE
+        ret[(int)ShortcutID::ForwardDeleteWord] = Shortcut(SDLK_DELETE, -1, 0, 1, 0); // CTRL + DELETE
+        ret[(int)ShortcutID::DeleteRight] = Shortcut(SDLK_DELETE, -1, 0, 0, 1); // SHIFT+BACKSPACE
+        ret[(int)ShortcutID::BackwardDelete] = Shortcut(SDLK_BACKSPACE, -1, 0, 0, 0); // BACKSPACE
+        ret[(int)ShortcutID::BackwardDeleteWord] = Shortcut(SDLK_BACKSPACE, -1, 0, 1, 0); // CTRL + BACKSPACE
+        ret[(int)ShortcutID::DeleteLeft] = Shortcut(SDLK_BACKSPACE, -1, 0, 0, 1); // SHIFT+BACKSPACE
+        ret[(int)ShortcutID::OverwriteCursor] = Shortcut(SDLK_INSERT, -1, 0, 0, 0); // INSERT
+        ret[(int)ShortcutID::Copy] = Shortcut(SDLK_c, -1, 0, 1, 0); // CTRL+C
+        ret[(int)ShortcutID::Paste] = Shortcut(SDLK_v, -1, 0, 1, 0); // CTRL+V
+        ret[(int)ShortcutID::Cut] = Shortcut(SDLK_x, -1, 0, 1, 0); // CTRL+X
+        ret[(int)ShortcutID::SelectAll] = Shortcut(SDLK_a, -1, 0, 1, 0); // CTRL+A
+        ret[(int)ShortcutID::AutocompleteOpen] = Shortcut(SDLK_SPACE, -1, 0, 1, 0); // CTRL+SPACE
+        ret[(int)ShortcutID::AutocompleteSelect] = Shortcut(SDLK_TAB, -1, 0, 0, 0); // TAB
+        ret[(int)ShortcutID::AutocompleteSelectActive] = Shortcut(SDLK_RETURN, -1, 0, 0, 0); // RETURN
+        ret[(int)ShortcutID::AutocompleteUp] = Shortcut(SDLK_UP, -1, 0, 0, 0); // UP ARROW
+        ret[(int)ShortcutID::AutocompleteDown] = Shortcut(SDLK_DOWN, -1, 0, 0, 0); // DOWN ARROW
+        ret[(int)ShortcutID::NewLine] = Shortcut(SDLK_RETURN, -1, 0, 0, 0); // RETURN
+        ret[(int)ShortcutID::Indent] = Shortcut(SDLK_TAB, -1, 0, 0, 0); // TAB
+        ret[(int)ShortcutID::Unindent] = Shortcut(SDLK_TAB, -1, 0, 0, 1); // SHIFT + TAB
+        ret[(int)ShortcutID::Find] = Shortcut(SDLK_f, -1, 0, 1, 0); // CTRL+F
+        ret[(int)ShortcutID::Replace] = Shortcut(SDLK_h, -1, 0, 1, 0); // CTRL+H
+        ret[(int)ShortcutID::FindNext] = Shortcut(SDLK_F3, -1, 0, 0, 0); // F3
+        ret[(int)ShortcutID::DebugStep] = Shortcut(SDLK_F10, -1, 0, 0, 0); // F10
+        ret[(int)ShortcutID::DebugStepInto] = Shortcut(SDLK_F11, -1, 0, 0, 0); // F11
+        ret[(int)ShortcutID::DebugStepOut] = Shortcut(SDLK_F11, -1, 0, 0, 1); // SHIFT+F11
+        ret[(int)ShortcutID::DebugContinue] = Shortcut(SDLK_F5, -1, 0, 0, 0); // F5
+        ret[(int)ShortcutID::DebugStop] = Shortcut(SDLK_F5, -1, 0, 0, 1); // SHIFT+F5
+        ret[(int)ShortcutID::DebugBreakpoint] = Shortcut(SDLK_F9, -1, 0, 0, 0); // F9
+        ret[(int)ShortcutID::DebugJumpHere] = Shortcut(SDLK_h, -1, 1, 1, 0); // CTRL+ALT+H
+        ret[(int)ShortcutID::DuplicateLine] = Shortcut(SDLK_d, -1, 0, 1, 0);    // CTRL+D
+        ret[(int)ShortcutID::CommentLines] = Shortcut(SDLK_k, -1, 0, 1, 1); // CTRL+SHIFT+K
+        ret[(int)ShortcutID::UncommentLines] = Shortcut(SDLK_u, -1, 0, 1, 1); // CTRL+SHIFT+U
 #else
-        ret[(int)TextEditor::ShortcutID::Undo] = TextEditor::Shortcut((int)ImGuiKey_Z, -1, 0, 1, 0); // CTRL+Z
-        ret[(int)TextEditor::ShortcutID::Redo] = TextEditor::Shortcut((int)ImGuiKey_Y, -1, 0, 1, 0); // CTRL+Y
-        ret[(int)TextEditor::ShortcutID::MoveUp] = TextEditor::Shortcut((int)ImGuiKey_UpArrow, -1, 0, 0, 0); // UP ARROW
-        ret[(int)TextEditor::ShortcutID::SelectUp] = TextEditor::Shortcut((int)ImGuiKey_UpArrow, -1, 0, 0, 1); // SHIFT + UP ARROW
-        ret[(int)TextEditor::ShortcutID::MoveDown] = TextEditor::Shortcut((int)ImGuiKey_DownArrow, -1, 0, 0, 0); // DOWN ARROW
-        ret[(int)TextEditor::ShortcutID::SelectDown] = TextEditor::Shortcut((int)ImGuiKey_DownArrow, -1, 0, 0, 1); // SHIFT + DOWN ARROW
-        ret[(int)TextEditor::ShortcutID::MoveLeft] = TextEditor::Shortcut((int)ImGuiKey_LeftArrow, -1, 0, 0, 0); // LEFT ARROW (+ SHIFT/CTRL)
-        ret[(int)TextEditor::ShortcutID::SelectLeft] = TextEditor::Shortcut((int)ImGuiKey_LeftArrow, -1, 0, 0, 1); // SHIFT + LEFT ARROW
-        ret[(int)TextEditor::ShortcutID::MoveWordLeft] = TextEditor::Shortcut((int)ImGuiKey_LeftArrow, -1, 0, 1, 0); // CTRL + LEFT ARROW
-        ret[(int)TextEditor::ShortcutID::SelectWordLeft] = TextEditor::Shortcut((int)ImGuiKey_LeftArrow, -1, 0, 1, 1); // CTRL + SHIFT + LEFT ARROW
-        ret[(int)TextEditor::ShortcutID::MoveRight] = TextEditor::Shortcut((int)ImGuiKey_RightArrow, -1, 0, 0, 0); // RIGHT ARROW
-        ret[(int)TextEditor::ShortcutID::SelectRight] = TextEditor::Shortcut((int)ImGuiKey_RightArrow, -1, 0, 0, 1); // SHIFT +RIGHT ARROW
-        ret[(int)TextEditor::ShortcutID::MoveWordRight] = TextEditor::Shortcut((int)ImGuiKey_RightArrow, -1, 0, 1, 0); // CTRL + RIGHT ARROW
-        ret[(int)TextEditor::ShortcutID::SelectWordRight] = TextEditor::Shortcut((int)ImGuiKey_RightArrow, -1, 0, 1, 1); // CTRL + SHIFT + RIGHT ARROW
-        ret[(int)TextEditor::ShortcutID::MoveUpBlock] = TextEditor::Shortcut((int)ImGuiKey_PageUp, -1, 0, 0, 0); // PAGE UP
-        ret[(int)TextEditor::ShortcutID::SelectUpBlock] = TextEditor::Shortcut((int)ImGuiKey_PageUp, -1, 0, 0, 1); // SHIFT + PAGE UP
-        ret[(int)TextEditor::ShortcutID::MoveDownBlock] = TextEditor::Shortcut((int)ImGuiKey_PageDown, -1, 0, 0, 0); // PAGE DOWN
-        ret[(int)TextEditor::ShortcutID::SelectDownBlock] = TextEditor::Shortcut((int)ImGuiKey_PageDown, -1, 0, 0, 1); // SHIFT+ PAGE DOWN
-        ret[(int)TextEditor::ShortcutID::MoveTop] = TextEditor::Shortcut((int)ImGuiKey_Home, -1, 0, 1, 0); // CTRL + HOME
-        ret[(int)TextEditor::ShortcutID::SelectTop] = TextEditor::Shortcut((int)ImGuiKey_Home, -1, 0, 1, 1); // CTRL + SHIFT + HOME
-        ret[(int)TextEditor::ShortcutID::MoveBottom] = TextEditor::Shortcut((int)ImGuiKey_End, -1, 0, 1, 0); // CTRL + END
-        ret[(int)TextEditor::ShortcutID::SelectBottom] = TextEditor::Shortcut((int)ImGuiKey_End, -1, 0, 1, 1); // CTRL + SHIFT + END
-        ret[(int)TextEditor::ShortcutID::MoveStartLine] = TextEditor::Shortcut((int)ImGuiKey_Home, -1, 0, 0, 0); // HOME
-        ret[(int)TextEditor::ShortcutID::SelectStartLine] = TextEditor::Shortcut((int)ImGuiKey_Home, -1, 0, 0, 1); // SHIFT + HOME
-        ret[(int)TextEditor::ShortcutID::MoveEndLine] = TextEditor::Shortcut((int)ImGuiKey_End, -1, 0, 0, 0); // END
-        ret[(int)TextEditor::ShortcutID::SelectEndLine] = TextEditor::Shortcut((int)ImGuiKey_End, -1, 0, 0, 1); // SHIFT + END
-        ret[(int)TextEditor::ShortcutID::ForwardDelete] = TextEditor::Shortcut((int)ImGuiKey_Delete, -1, 0, 0, 0); // DELETE
-        ret[(int)TextEditor::ShortcutID::ForwardDeleteWord] = TextEditor::Shortcut((int)ImGuiKey_Delete, -1, 0, 1, 0); // CTRL + DELETE
-        ret[(int)TextEditor::ShortcutID::DeleteRight] = TextEditor::Shortcut((int)ImGuiKey_Delete, -1, 0, 0, 1); // SHIFT+BACKSPACE
-        ret[(int)TextEditor::ShortcutID::BackwardDelete] = TextEditor::Shortcut((int)ImGuiKey_Backspace, -1, 0, 0, 0); // BACKSPACE
-        ret[(int)TextEditor::ShortcutID::BackwardDeleteWord] = TextEditor::Shortcut((int)ImGuiKey_Backspace, -1, 0, 1, 0); // CTRL + BACKSPACE
-        ret[(int)TextEditor::ShortcutID::DeleteLeft] = TextEditor::Shortcut((int)ImGuiKey_Backspace, -1, 0, 0, 1); // SHIFT+BACKSPACE
-        ret[(int)TextEditor::ShortcutID::OverwriteCursor] = TextEditor::Shortcut((int)ImGuiKey_Insert, -1, 0, 0, 0); // INSERT
-        ret[(int)TextEditor::ShortcutID::Copy] = TextEditor::Shortcut((int)ImGuiKey_C, -1, 0, 1, 0); // CTRL+C
-        ret[(int)TextEditor::ShortcutID::Paste] = TextEditor::Shortcut((int)ImGuiKey_V, -1, 0, 1, 0); // CTRL+V
-        ret[(int)TextEditor::ShortcutID::Cut] = TextEditor::Shortcut((int)ImGuiKey_X, -1, 0, 1, 0); // CTRL+X
-        ret[(int)TextEditor::ShortcutID::SelectAll] = TextEditor::Shortcut((int)ImGuiKey_A, -1, 0, 1, 0); // CTRL+A
-        ret[(int)TextEditor::ShortcutID::AutocompleteOpen] = TextEditor::Shortcut((int)ImGuiKey_Space, -1, 0, 1, 0); // CTRL+SPACE
-        ret[(int)TextEditor::ShortcutID::AutocompleteSelect] = TextEditor::Shortcut((int)ImGuiKey_Tab, -1, 0, 0, 0); // TAB
-        ret[(int)TextEditor::ShortcutID::AutocompleteSelectActive] = TextEditor::Shortcut((int)ImGuiKey_Enter, -1, 0, 0, 0); // RETURN
-        ret[(int)TextEditor::ShortcutID::AutocompleteUp] = TextEditor::Shortcut((int)ImGuiKey_UpArrow, -1, 0, 0, 0); // UP ARROW
-        ret[(int)TextEditor::ShortcutID::AutocompleteDown] = TextEditor::Shortcut((int)ImGuiKey_DownArrow, -1, 0, 0, 0); // DOWN ARROW
-        ret[(int)TextEditor::ShortcutID::NewLine] = TextEditor::Shortcut((int)ImGuiKey_Enter, -1, 0, 0, 0); // RETURN
-        ret[(int)TextEditor::ShortcutID::Indent] = TextEditor::Shortcut((int)ImGuiKey_Tab, -1, 0, 0, 0); // TAB
-        ret[(int)TextEditor::ShortcutID::Unindent] = TextEditor::Shortcut((int)ImGuiKey_Tab, -1, 0, 0, 1); // SHIFT + TAB
-        ret[(int)TextEditor::ShortcutID::Find] = TextEditor::Shortcut((int)ImGuiKey_F, -1, 0, 1, 0); // CTRL+F
-        ret[(int)TextEditor::ShortcutID::Replace] = TextEditor::Shortcut((int)ImGuiKey_H, -1, 0, 1, 0); // CTRL+H
-        ret[(int)TextEditor::ShortcutID::FindNext] = TextEditor::Shortcut((int)ImGuiKey_F3, -1, 0, 0, 0); // F3
-        ret[(int)TextEditor::ShortcutID::DebugStep] = TextEditor::Shortcut((int)ImGuiKey_F10, -1, 0, 0, 0); // F10
-        ret[(int)TextEditor::ShortcutID::DebugStepInto] = TextEditor::Shortcut((int)ImGuiKey_F11, -1, 0, 0, 0); // F11
-        ret[(int)TextEditor::ShortcutID::DebugStepOut] = TextEditor::Shortcut((int)ImGuiKey_F11, -1, 0, 0, 1); // SHIFT+F11
-        ret[(int)TextEditor::ShortcutID::DebugContinue] = TextEditor::Shortcut((int)ImGuiKey_F5, -1, 0, 0, 0); // F5
-        ret[(int)TextEditor::ShortcutID::DebugStop] = TextEditor::Shortcut((int)ImGuiKey_F5, -1, 0, 0, 1); // SHIFT+F5
-        ret[(int)TextEditor::ShortcutID::DebugBreakpoint] = TextEditor::Shortcut((int)ImGuiKey_F9, -1, 0, 0, 0); // F9
-        ret[(int)TextEditor::ShortcutID::DebugJumpHere] = TextEditor::Shortcut((int)ImGuiKey_H, -1, 1, 1, 0); // CTRL+ALT+H
-        ret[(int)TextEditor::ShortcutID::DuplicateLine] = TextEditor::Shortcut((int)ImGuiKey_D, -1, 0, 1, 0);   // CTRL+D
-        ret[(int)TextEditor::ShortcutID::CommentLines] = TextEditor::Shortcut((int)ImGuiKey_K, -1, 0, 1, 1); // CTRL+SHIFT+K
-        ret[(int)TextEditor::ShortcutID::UncommentLines] = TextEditor::Shortcut((int)ImGuiKey_U, -1, 0, 1, 1); // CTRL+SHIFT+U
+        ret[(int)ShortcutID::Undo] = Shortcut((int)ImGuiKey_Z, -1, 0, 1, 0); // CTRL+Z
+        ret[(int)ShortcutID::Redo] = Shortcut((int)ImGuiKey_Y, -1, 0, 1, 0); // CTRL+Y
+        ret[(int)ShortcutID::MoveUp] = Shortcut((int)ImGuiKey_UpArrow, -1, 0, 0, 0); // UP ARROW
+        ret[(int)ShortcutID::SelectUp] = Shortcut((int)ImGuiKey_UpArrow, -1, 0, 0, 1); // SHIFT + UP ARROW
+        ret[(int)ShortcutID::MoveDown] = Shortcut((int)ImGuiKey_DownArrow, -1, 0, 0, 0); // DOWN ARROW
+        ret[(int)ShortcutID::SelectDown] = Shortcut((int)ImGuiKey_DownArrow, -1, 0, 0, 1); // SHIFT + DOWN ARROW
+        ret[(int)ShortcutID::MoveLeft] = Shortcut((int)ImGuiKey_LeftArrow, -1, 0, 0, 0); // LEFT ARROW (+ SHIFT/CTRL)
+        ret[(int)ShortcutID::SelectLeft] = Shortcut((int)ImGuiKey_LeftArrow, -1, 0, 0, 1); // SHIFT + LEFT ARROW
+        ret[(int)ShortcutID::MoveWordLeft] = Shortcut((int)ImGuiKey_LeftArrow, -1, 0, 1, 0); // CTRL + LEFT ARROW
+        ret[(int)ShortcutID::SelectWordLeft] = Shortcut((int)ImGuiKey_LeftArrow, -1, 0, 1, 1); // CTRL + SHIFT + LEFT ARROW
+        ret[(int)ShortcutID::MoveRight] = Shortcut((int)ImGuiKey_RightArrow, -1, 0, 0, 0); // RIGHT ARROW
+        ret[(int)ShortcutID::SelectRight] = Shortcut((int)ImGuiKey_RightArrow, -1, 0, 0, 1); // SHIFT +RIGHT ARROW
+        ret[(int)ShortcutID::MoveWordRight] = Shortcut((int)ImGuiKey_RightArrow, -1, 0, 1, 0); // CTRL + RIGHT ARROW
+        ret[(int)ShortcutID::SelectWordRight] = Shortcut((int)ImGuiKey_RightArrow, -1, 0, 1, 1); // CTRL + SHIFT + RIGHT ARROW
+        ret[(int)ShortcutID::MoveUpBlock] = Shortcut((int)ImGuiKey_PageUp, -1, 0, 0, 0); // PAGE UP
+        ret[(int)ShortcutID::SelectUpBlock] = Shortcut((int)ImGuiKey_PageUp, -1, 0, 0, 1); // SHIFT + PAGE UP
+        ret[(int)ShortcutID::MoveDownBlock] = Shortcut((int)ImGuiKey_PageDown, -1, 0, 0, 0); // PAGE DOWN
+        ret[(int)ShortcutID::SelectDownBlock] = Shortcut((int)ImGuiKey_PageDown, -1, 0, 0, 1); // SHIFT+ PAGE DOWN
+        ret[(int)ShortcutID::MoveTop] = Shortcut((int)ImGuiKey_Home, -1, 0, 1, 0); // CTRL + HOME
+        ret[(int)ShortcutID::SelectTop] = Shortcut((int)ImGuiKey_Home, -1, 0, 1, 1); // CTRL + SHIFT + HOME
+        ret[(int)ShortcutID::MoveBottom] = Shortcut((int)ImGuiKey_End, -1, 0, 1, 0); // CTRL + END
+        ret[(int)ShortcutID::SelectBottom] = Shortcut((int)ImGuiKey_End, -1, 0, 1, 1); // CTRL + SHIFT + END
+        ret[(int)ShortcutID::MoveStartLine] = Shortcut((int)ImGuiKey_Home, -1, 0, 0, 0); // HOME
+        ret[(int)ShortcutID::SelectStartLine] = Shortcut((int)ImGuiKey_Home, -1, 0, 0, 1); // SHIFT + HOME
+        ret[(int)ShortcutID::MoveEndLine] = Shortcut((int)ImGuiKey_End, -1, 0, 0, 0); // END
+        ret[(int)ShortcutID::SelectEndLine] = Shortcut((int)ImGuiKey_End, -1, 0, 0, 1); // SHIFT + END
+        ret[(int)ShortcutID::ForwardDelete] = Shortcut((int)ImGuiKey_Delete, -1, 0, 0, 0); // DELETE
+        ret[(int)ShortcutID::ForwardDeleteWord] = Shortcut((int)ImGuiKey_Delete, -1, 0, 1, 0); // CTRL + DELETE
+        ret[(int)ShortcutID::DeleteRight] = Shortcut((int)ImGuiKey_Delete, -1, 0, 0, 1); // SHIFT+BACKSPACE
+        ret[(int)ShortcutID::BackwardDelete] = Shortcut((int)ImGuiKey_Backspace, -1, 0, 0, 0); // BACKSPACE
+        ret[(int)ShortcutID::BackwardDeleteWord] = Shortcut((int)ImGuiKey_Backspace, -1, 0, 1, 0); // CTRL + BACKSPACE
+        ret[(int)ShortcutID::DeleteLeft] = Shortcut((int)ImGuiKey_Backspace, -1, 0, 0, 1); // SHIFT+BACKSPACE
+        ret[(int)ShortcutID::OverwriteCursor] = Shortcut((int)ImGuiKey_Insert, -1, 0, 0, 0); // INSERT
+        ret[(int)ShortcutID::Copy] = Shortcut((int)ImGuiKey_C, -1, 0, 1, 0); // CTRL+C
+        ret[(int)ShortcutID::Paste] = Shortcut((int)ImGuiKey_V, -1, 0, 1, 0); // CTRL+V
+        ret[(int)ShortcutID::Cut] = Shortcut((int)ImGuiKey_X, -1, 0, 1, 0); // CTRL+X
+        ret[(int)ShortcutID::SelectAll] = Shortcut((int)ImGuiKey_A, -1, 0, 1, 0); // CTRL+A
+        ret[(int)ShortcutID::AutocompleteOpen] = Shortcut((int)ImGuiKey_Space, -1, 0, 1, 0); // CTRL+SPACE
+        ret[(int)ShortcutID::AutocompleteSelect] = Shortcut((int)ImGuiKey_Tab, -1, 0, 0, 0); // TAB
+        ret[(int)ShortcutID::AutocompleteSelectActive] = Shortcut((int)ImGuiKey_Enter, -1, 0, 0, 0); // RETURN
+        ret[(int)ShortcutID::AutocompleteUp] = Shortcut((int)ImGuiKey_UpArrow, -1, 0, 0, 0); // UP ARROW
+        ret[(int)ShortcutID::AutocompleteDown] = Shortcut((int)ImGuiKey_DownArrow, -1, 0, 0, 0); // DOWN ARROW
+        ret[(int)ShortcutID::NewLine] = Shortcut((int)ImGuiKey_Enter, -1, 0, 0, 0); // RETURN
+        ret[(int)ShortcutID::Indent] = Shortcut((int)ImGuiKey_Tab, -1, 0, 0, 0); // TAB
+        ret[(int)ShortcutID::Unindent] = Shortcut((int)ImGuiKey_Tab, -1, 0, 0, 1); // SHIFT + TAB
+        ret[(int)ShortcutID::Find] = Shortcut((int)ImGuiKey_F, -1, 0, 1, 0); // CTRL+F
+        ret[(int)ShortcutID::Replace] = Shortcut((int)ImGuiKey_H, -1, 0, 1, 0); // CTRL+H
+        ret[(int)ShortcutID::FindNext] = Shortcut((int)ImGuiKey_F3, -1, 0, 0, 0); // F3
+        ret[(int)ShortcutID::DebugStep] = Shortcut((int)ImGuiKey_F10, -1, 0, 0, 0); // F10
+        ret[(int)ShortcutID::DebugStepInto] = Shortcut((int)ImGuiKey_F11, -1, 0, 0, 0); // F11
+        ret[(int)ShortcutID::DebugStepOut] = Shortcut((int)ImGuiKey_F11, -1, 0, 0, 1); // SHIFT+F11
+        ret[(int)ShortcutID::DebugContinue] = Shortcut((int)ImGuiKey_F5, -1, 0, 0, 0); // F5
+        ret[(int)ShortcutID::DebugStop] = Shortcut((int)ImGuiKey_F5, -1, 0, 0, 1); // SHIFT+F5
+        ret[(int)ShortcutID::DebugBreakpoint] = Shortcut((int)ImGuiKey_F9, -1, 0, 0, 0); // F9
+        ret[(int)ShortcutID::DebugJumpHere] = Shortcut((int)ImGuiKey_H, -1, 1, 1, 0); // CTRL+ALT+H
+        ret[(int)ShortcutID::DuplicateLine] = Shortcut((int)ImGuiKey_D, -1, 0, 1, 0);   // CTRL+D
+        ret[(int)ShortcutID::CommentLines] = Shortcut((int)ImGuiKey_K, -1, 0, 1, 1); // CTRL+SHIFT+K
+        ret[(int)ShortcutID::UncommentLines] = Shortcut((int)ImGuiKey_U, -1, 0, 1, 1); // CTRL+SHIFT+U
 #endif
 
         return ret;
@@ -334,12 +336,12 @@ std::string TextEditor::GetText(const Coordinates & aStart, const Coordinates & 
     return result;
 }
 
-TextEditor::Coordinates TextEditor::GetActualCursorCoordinates() const
+Coordinates TextEditor::GetActualCursorCoordinates() const
 {
     return SanitizeCoordinates(mState.mCursorPosition);
 }
 
-TextEditor::Coordinates TextEditor::SanitizeCoordinates(const Coordinates & aValue) const
+Coordinates TextEditor::SanitizeCoordinates(const Coordinates & aValue) const
 {
     auto line = aValue.mLine;
     auto column = aValue.mColumn;
@@ -682,7 +684,7 @@ void TextEditor::AddUndo(UndoRecord& aValue)
     ++mUndoIndex;
 }
 
-TextEditor::Coordinates TextEditor::ScreenPosToCoordinates(const ImVec2& aPosition) const
+Coordinates TextEditor::ScreenPosToCoordinates(const ImVec2& aPosition) const
 {
     ImVec2 origin = mUICursorPos;
     ImVec2 local(aPosition.x - origin.x, aPosition.y - origin.y);
@@ -755,7 +757,7 @@ TextEditor::Coordinates TextEditor::ScreenPosToCoordinates(const ImVec2& aPositi
 
     return SanitizeCoordinates(Coordinates(lineNo, columnCoord));
 }
-TextEditor::Coordinates TextEditor::MousePosToCoordinates(const ImVec2& aPosition) const
+Coordinates TextEditor::MousePosToCoordinates(const ImVec2& aPosition) const
 {
     ImVec2 origin = mUICursorPos;
     ImVec2 local(aPosition.x - origin.x, aPosition.y - origin.y);
@@ -826,7 +828,7 @@ TextEditor::Coordinates TextEditor::MousePosToCoordinates(const ImVec2& aPositio
     return SanitizeCoordinates(Coordinates(lineNo, columnCoord - modifier));
 }
 
-TextEditor::Coordinates TextEditor::FindWordStart(const Coordinates & aFrom) const
+Coordinates TextEditor::FindWordStart(const Coordinates & aFrom) const
 {
     Coordinates at = aFrom;
     if (at.mLine >= (int)mLines.size())
@@ -860,7 +862,7 @@ TextEditor::Coordinates TextEditor::FindWordStart(const Coordinates & aFrom) con
     return Coordinates(at.mLine, GetCharacterColumn(at.mLine, cindex));
 }
 
-TextEditor::Coordinates TextEditor::FindWordEnd(const Coordinates & aFrom) const
+Coordinates TextEditor::FindWordEnd(const Coordinates & aFrom) const
 {
     Coordinates at = aFrom;
     if (at.mLine >= (int)mLines.size())
@@ -893,7 +895,7 @@ TextEditor::Coordinates TextEditor::FindWordEnd(const Coordinates & aFrom) const
     return Coordinates(aFrom.mLine, GetCharacterColumn(aFrom.mLine, cindex));
 }
 
-TextEditor::Coordinates TextEditor::FindNextWord(const Coordinates & aFrom) const
+Coordinates TextEditor::FindNextWord(const Coordinates & aFrom) const
 {
     Coordinates at = aFrom;
     if (at.mLine >= (int)mLines.size())
@@ -1198,7 +1200,7 @@ ImU32 TextEditor::GetGlyphColor(const Glyph & aGlyph) const
     return color;
 }
 
-TextEditor::Coordinates TextEditor::FindFirst(const std::string& what, const Coordinates& fromWhere)
+Coordinates TextEditor::FindFirst(const std::string& what, const Coordinates& fromWhere)
 {
     if (fromWhere.mLine < 0 || fromWhere.mLine >= mLines.size())
         return Coordinates(mLines.size(), 0);
@@ -1258,7 +1260,7 @@ void TextEditor::HandleKeyboardInputs()
                     if ((sct.Ctrl == ctrl) && (sct.Alt == alt) && (sct.Shift == shift)) {
 
                             // PRESSED:
-                            curActionID = (TextEditor::ShortcutID)i;
+                            curActionID = (ShortcutID)i;
                             switch (curActionID) {
                                     case ShortcutID::Paste:
                                     case ShortcutID::Cut:
@@ -1314,7 +1316,7 @@ void TextEditor::HandleKeyboardInputs()
                         ((sct.Shift== 0 && !shift) || (sct.Shift== 1 && shift) || (sct.Shift== 2))) {
 
                             // PRESSED:
-                            curActionID = (TextEditor::ShortcutID)i;
+                            curActionID = (ShortcutID)i;
                             switch (curActionID) {
                                     case ShortcutID::Paste:
                                     case ShortcutID::Cut:
@@ -1500,7 +1502,7 @@ void TextEditor::HandleKeyboardInputs()
                     }
                     mState.mCursorPosition.mLine++;
 
-                    undo.mAddedStart = TextEditor::Coordinates(mState.mCursorPosition.mLine-1, mState.mCursorPosition.mColumn);
+                    undo.mAddedStart = Coordinates(mState.mCursorPosition.mLine-1, mState.mCursorPosition.mColumn);
                     undo.mAddedEnd = mState.mCursorPosition;
 
                     undo.mAfter = mState;
@@ -1509,8 +1511,8 @@ void TextEditor::HandleKeyboardInputs()
                 } break;
                 case ShortcutID::CommentLines: {
                     for (int l = mState.mSelectionStart.mLine; l <= mState.mSelectionEnd.mLine && l < mLines.size(); l++) {
-                        mLines[l].insert(mLines[l].begin(), TextEditor::Glyph('/', TextEditor::PaletteIndex::Comment));
-                        mLines[l].insert(mLines[l].begin(), TextEditor::Glyph('/', TextEditor::PaletteIndex::Comment));
+                        mLines[l].insert(mLines[l].begin(), TextEditor::Glyph('/', PaletteIndex::Comment));
+                        mLines[l].insert(mLines[l].begin(), TextEditor::Glyph('/', PaletteIndex::Comment));
                     }
                     Colorize(mState.mSelectionStart.mLine, mState.mSelectionEnd.mLine);
                 } break;
@@ -2731,7 +2733,7 @@ void TextEditor::RenderInternal(const char* aTitle)
         auto left = (int)ceil(scrollX / mCharAdvance.x);
         auto right = (int)ceil((scrollX + width) / mCharAdvance.x);
 
-        TextEditor::Coordinates pos(mDebugCurrentLine, 0);
+        Coordinates pos(mDebugCurrentLine, 0);
 
         if (pos.mLine < top)
             ImGui::SetScrollY(std::max(0.0f, (pos.mLine - 1) * mCharAdvance.y));
@@ -2763,7 +2765,7 @@ void TextEditor::RenderInternal(const char* aTitle)
 }
 
 #if IMGUICTE_ENABLE_SPIRV
-void TextEditor::mOpenFunctionDeclarationTooltip(const std::string& obj, TextEditor::Coordinates coord)
+void TextEditor::mOpenFunctionDeclarationTooltip(const std::string& obj, Coordinates coord)
 {
         if (mACFunctions.count(obj)) {
                 mFunctionDeclarationTooltip = true;
@@ -2791,7 +2793,7 @@ std::string TextEditor::mBuildFunctionDef(const std::string& func, const std::st
         return ret + ")";
 }
 #else
-void TextEditor::mOpenFunctionDeclarationTooltip(const std::string&, TextEditor::Coordinates) {}
+void TextEditor::mOpenFunctionDeclarationTooltip(const std::string&, Coordinates) {}
 std::string TextEditor::mBuildFunctionDef(const std::string&, const std::string&) { return std::string(); }
 #endif
 #if IMGUICTE_ENABLE_SPIRV
@@ -3331,7 +3333,7 @@ void TextEditor::m_buildSuggestions(bool* keepACOpened)
 void TextEditor::m_buildSuggestions(bool* keepACOpened) { (void)keepACOpened; }
 #endif
 
-ImVec2 TextEditor::CoordinatesToScreenPos(const TextEditor::Coordinates& aPosition) const
+ImVec2 TextEditor::CoordinatesToScreenPos(const Coordinates& aPosition) const
 {
     ImVec2 origin = mUICursorPos;
     int dist = aPosition.mColumn;
@@ -3464,7 +3466,7 @@ void TextEditor::Render(const char* aTitle, const ImVec2& aSize, bool aBorder)
                     ((sct.Alt == 0 && !alt) || (sct.Alt == 1 && alt) || (sct.Alt == 2)) &&          // alt check
                     ((sct.Shift == 0 && !shift) || (sct.Shift == 1 && shift) || (sct.Shift == 2))) {// shift check
                 
-                    curActionID = (TextEditor::ShortcutID)i;
+                    curActionID = (ShortcutID)i;
                 }
             }
 #           else
@@ -3486,13 +3488,13 @@ void TextEditor::Render(const char* aTitle, const ImVec2& aSize, bool aBorder)
                 if (((sct.Ctrl  == 0 && !ctrl ) || (sct.Ctrl  == 1 && ctrl ) || (sct.Ctrl  == 2)) &&
                     ((sct.Alt   == 0 && !alt  ) || (sct.Alt   == 1 && alt  ) || (sct.Alt   == 2)) &&
                     ((sct.Shift == 0 && !shift) || (sct.Shift == 1 && shift) || (sct.Shift == 2))) {
-                    curActionID = (TextEditor::ShortcutID)i;
+                    curActionID = (ShortcutID)i;
                 }
             }
 
 #           endif
         }
-        mFindNext = curActionID == TextEditor::ShortcutID::FindNext;
+        mFindNext = curActionID == ShortcutID::FindNext;
 
         if (mFindJustOpened) {
             std::string txt = GetSelectedText();
@@ -3922,9 +3924,9 @@ void TextEditor::EnterCharacter(ImWchar aChar, bool aShift)
                 {
                     if (mInsertSpaces) {
                         for (int i = 0; i < mTabSize; i++)
-                            line.insert(line.begin(), Glyph(' ', TextEditor::PaletteIndex::Background));
+                            line.insert(line.begin(), Glyph(' ', PaletteIndex::Background));
                     } else
-                        line.insert(line.begin(), Glyph('\t', TextEditor::PaletteIndex::Background));
+                        line.insert(line.begin(), Glyph('\t', PaletteIndex::Background));
                     modified = true;
                 }
             }
@@ -4176,7 +4178,7 @@ void TextEditor::SetColorizerEnable(bool aValue)
     mColorizerEnabled = aValue;
 }
 
-TextEditor::Coordinates TextEditor::GetCorrectCursorPosition()
+Coordinates TextEditor::GetCorrectCursorPosition()
 {
     auto curPos = GetCursorPosition();
 
@@ -4226,16 +4228,16 @@ void TextEditor::SetSelection(const Coordinates & aStart, const Coordinates & aE
 
     switch (aMode)
     {
-    case TextEditor::SelectionMode::Normal:
+    case SelectionMode::Normal:
         break;
-    case TextEditor::SelectionMode::Word:
+    case SelectionMode::Word:
     {
         mState.mSelectionStart = FindWordStart(mState.mSelectionStart);
         if (!IsOnWordBoundary(mState.mSelectionEnd))
             mState.mSelectionEnd = FindWordEnd(FindWordStart(mState.mSelectionEnd));
         break;
     }
-    case TextEditor::SelectionMode::Line:
+    case SelectionMode::Line:
     {
         const auto lineNo = mState.mSelectionEnd.mLine;
         const auto lineSize = (size_t)lineNo < mLines.size() ? mLines[lineNo].size() : 0;
@@ -4800,7 +4802,7 @@ bool TextEditor::HasSelection() const
     return mState.mSelectionEnd > mState.mSelectionStart;
 }
 
-void TextEditor::SetShortcut(TextEditor::ShortcutID id, Shortcut s) {
+void TextEditor::SetShortcut(ShortcutID id, Shortcut s) {
     m_shortcuts[(int)id].Key1 = s.Key1;
     m_shortcuts[(int)id].Key2 = s.Key2;
     if (m_shortcuts[(int)id].Ctrl != 2)
@@ -5709,11 +5711,11 @@ int TextEditor::GetPageSize() const
 
 TextEditor::UndoRecord::UndoRecord(
     const std::string& aAdded,
-    const TextEditor::Coordinates aAddedStart,
-    const TextEditor::Coordinates aAddedEnd,
+    const Coordinates aAddedStart,
+    const Coordinates aAddedEnd,
     const std::string& aRemoved,
-    const TextEditor::Coordinates aRemovedStart,
-    const TextEditor::Coordinates aRemovedEnd,
+    const Coordinates aRemovedStart,
+    const Coordinates aRemovedEnd,
     TextEditor::EditorState& aBefore,
     TextEditor::EditorState& aAfter)
     : mAdded(aAdded)
@@ -5985,7 +5987,7 @@ static bool TokenizeCStylePunctuation(const char * in_begin, const char * in_end
     return false;
 }
 
-const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::CPlusPlus()
+const LanguageDefinition& CPlusPlus()
 {
     static bool inited = false;
     static LanguageDefinition langDef;
@@ -6053,7 +6055,7 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::CPlusPlus(
     return langDef;
 }
 
-const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::HLSL()
+const LanguageDefinition& HLSL()
 {
     static bool inited = false;
     static LanguageDefinition langDef;
@@ -6104,7 +6106,7 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::HLSL()
     }
     return langDef;
 }
-void TextEditor::LanguageDefinition::m_HLSLDocumentation(Identifiers& idents)
+static void m_HLSLDocumentation(Identifiers& idents)
 {
     /* SOURCE: https://docs.microsoft.com/en-us/windows/desktop/direct3dhlsl/dx-graphics-hlsl-intrinsic-functions */
 
@@ -6245,7 +6247,7 @@ void TextEditor::LanguageDefinition::m_HLSLDocumentation(Identifiers& idents)
     idents.insert(std::make_pair("trunc", Identifier("Truncates floating-point value(s) to integer value(s)")));
 }
 
-const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::GLSL()
+const LanguageDefinition& GLSL()
 {
     static bool inited = false;
     static LanguageDefinition langDef;
@@ -6290,7 +6292,7 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::GLSL()
     }
     return langDef;
 }
-void TextEditor::LanguageDefinition::m_GLSLDocumentation(Identifiers& idents)
+static void m_GLSLDocumentation(Identifiers& idents)
 {
     /* SOURCE: https://docs.microsoft.com/en-us/windows/desktop/direct3dhlsl/dx-graphics-hlsl-intrinsic-functions */
 
@@ -6456,7 +6458,7 @@ void TextEditor::LanguageDefinition::m_GLSLDocumentation(Identifiers& idents)
     idents.insert(std::make_pair("atomicXor", Identifier("int atomicXor(inout int mem, int data)\nuint atomicXor(inout uint mem, uint data)\nPerform an atomic logical exclusive OR operation to a variable")));
 }
 
-const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::SPIRV()
+const LanguageDefinition& SPIRV()
 {
 #if IMGUICTE_ENABLE_SPIRV
         static bool inited = false;
@@ -6501,7 +6503,7 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::SPIRV()
 #endif
 }
 
-const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::C()
+const LanguageDefinition& C()
 {
     static bool inited = false;
     static LanguageDefinition langDef;
@@ -6566,7 +6568,7 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::C()
     return langDef;
 }
 
-const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::SQL()
+const LanguageDefinition& SQL()
 {
     static bool inited = false;
     static LanguageDefinition langDef;
@@ -6629,7 +6631,7 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::SQL()
     return langDef;
 }
 
-const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::AngelScript()
+const LanguageDefinition& AngelScript()
 {
     static bool inited = false;
     static LanguageDefinition langDef;
@@ -6678,7 +6680,7 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::AngelScrip
     return langDef;
 }
 
-const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::Lua()
+const LanguageDefinition& Lua()
 {
     static bool inited = false;
     static LanguageDefinition langDef;
@@ -6731,7 +6733,7 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::Lua()
     return langDef;
 }
 
-const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::JSON()
+const LanguageDefinition& JSON()
 {
     static bool inited = false;
     static LanguageDefinition langDef;
@@ -6757,8 +6759,7 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::JSON()
     }
     return langDef;
 }
-
-const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::JSONC()
+const LanguageDefinition& JSONC()
 {
     static bool inited = false;
     static LanguageDefinition langDef;
@@ -6788,7 +6789,7 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::JSONC()
     return langDef;
 }
 
-const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::JSONWithHash()
+const LanguageDefinition& JSONWithHash()
 {
     static bool inited = false;
     static LanguageDefinition langDef;
@@ -6819,3 +6820,5 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::JSONWithHa
     }
     return langDef;
 }
+
+} // namespace ImTextEdit

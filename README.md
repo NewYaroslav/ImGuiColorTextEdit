@@ -21,17 +21,17 @@ The code is (still) work in progress, please report if you find any issues.
 
 | Language | Function |
 | --- | --- |
-| CPlusPlus | `static const LanguageDefinition& CPlusPlus();` |
-| HLSL | `static const LanguageDefinition& HLSL();` |
-| GLSL | `static const LanguageDefinition& GLSL();` |
-| SPIRV | `static const LanguageDefinition& SPIRV();` |
-| C | `static const LanguageDefinition& C();` |
-| SQL | `static const LanguageDefinition& SQL();` |
-| AngelScript | `static const LanguageDefinition& AngelScript();` |
-| Lua | `static const LanguageDefinition& Lua();` |
-| JSON | `static const LanguageDefinition& JSON();` |
-| JSONC | `static const LanguageDefinition& JSONC();` |
-| JSONWithHash | `static const LanguageDefinition& JSONWithHash();` |
+| CPlusPlus | `const LanguageDefinition& CPlusPlus();` |
+| HLSL | `const LanguageDefinition& HLSL();` |
+| GLSL | `const LanguageDefinition& GLSL();` |
+| SPIRV | `const LanguageDefinition& SPIRV();` |
+| C | `const LanguageDefinition& C();` |
+| SQL | `const LanguageDefinition& SQL();` |
+| AngelScript | `const LanguageDefinition& AngelScript();` |
+| Lua | `const LanguageDefinition& Lua();` |
+| JSON | `const LanguageDefinition& JSON();` |
+| JSONC | `const LanguageDefinition& JSONC();` |
+| JSONWithHash | `const LanguageDefinition& JSONWithHash();` |
 
 # JSON editor example
 
@@ -41,14 +41,14 @@ The snippet below demonstrates how to embed **ImGuiColorTextEdit** in a JSON too
 #include "ImGuiColorTextEdit.h"
 
 // Create the editor and enable JSON syntax
-TextEditor editor;
-auto lang = TextEditor::LanguageDefinition::JSON();
+ImTextEdit::TextEditor editor;
+auto lang = ImTextEdit::JSON();
 editor.SetLanguageDefinition(lang);
 
 // Optional: create a custom color palette based on the dark theme
-TextEditor::Palette customPalette = TextEditor::GetDarkPalette();
-customPalette[(int)TextEditor::PaletteIndex::Keyword] = ImVec4(0.86f, 0.40f, 0.24f, 1.0f); // keywords
-customPalette[(int)TextEditor::PaletteIndex::String]  = ImVec4(0.90f, 0.76f, 0.18f, 1.0f); // strings
+ImTextEdit::TextEditor::Palette customPalette = ImTextEdit::TextEditor::GetDarkPalette();
+customPalette[(int)ImTextEdit::PaletteIndex::Keyword] = ImVec4(0.86f, 0.40f, 0.24f, 1.0f); // keywords
+customPalette[(int)ImTextEdit::PaletteIndex::String]  = ImVec4(0.90f, 0.76f, 0.18f, 1.0f); // strings
 editor.SetPalette(customPalette);
 
 // --- main render loop ---
@@ -102,18 +102,18 @@ if (ImGui::BeginMenuBar()) {
         ImGui::Separator();
 
         if (ImGui::MenuItem("Select all"))
-            editor.SetSelection(TextEditor::Coordinates(), TextEditor::Coordinates(editor.GetTotalLines(), 0));
+editor.SetSelection(ImTextEdit::Coordinates(), ImTextEdit::Coordinates(editor.GetTotalLines(), 0));
 
         ImGui::EndMenu();
     }
 
     if (ImGui::BeginMenu("View")) {
         if (ImGui::MenuItem("Dark palette"))
-            editor.SetPalette(TextEditor::GetDarkPalette());
+            editor.SetPalette(ImTextEdit::TextEditor::GetDarkPalette());
         if (ImGui::MenuItem("Light palette"))
-            editor.SetPalette(TextEditor::GetLightPalette());
+            editor.SetPalette(ImTextEdit::TextEditor::GetLightPalette());
         if (ImGui::MenuItem("Retro blue palette"))
-            editor.SetPalette(TextEditor::GetRetroBluePalette());
+            editor.SetPalette(ImTextEdit::TextEditor::GetRetroBluePalette());
         if (ImGui::MenuItem("Custom palette"))
             editor.SetPalette(customPalette);
         ImGui::EndMenu();
@@ -138,7 +138,7 @@ ImGui::Begin("##basement", NULL,
         const std::string text = editor.GetText();
         json::sax_parse(text, &json_sax);
 
-        TextEditor::ErrorMarkers markers;
+        ImTextEdit::TextEditor::ErrorMarkers markers;
         for (const auto& err : json_sax.errors) {
             int line = std::count(text.begin(), text.begin() + err.first, '\n');
             markers.insert({line, err.second});
