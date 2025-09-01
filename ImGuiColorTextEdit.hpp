@@ -1,5 +1,9 @@
 #pragma once
 
+#ifndef IMGUICTE_ENABLE_SPIRV
+#define IMGUICTE_ENABLE_SPIRV 0
+#endif
+
 #include <string>
 #include <vector>
 #include <array>
@@ -11,7 +15,9 @@
 #include <map>
 #include <regex>
 #include <imgui/imgui.h>
+#if IMGUICTE_ENABLE_SPIRV
 #include <SHADERed/Objects/SPIRVParser.h>
+#endif
 
 class TextEditor {
 public:
@@ -438,38 +444,44 @@ public:
 	void ColorizeRange(int aFromLine = 0, int aToLine = 0);
 	void ColorizeInternal();
 
-	inline void ClearAutocompleteData() 
-	{
-		mACFunctions.clear();
-		mACUserTypes.clear();
-		mACUniforms.clear();
-		mACGlobals.clear();
-	}
-	inline void ClearAutocompleteEntries()
-	{
-		mACEntries.clear();
-		mACEntrySearch.clear();
-	}
-	inline const std::unordered_map<std::string, ed::SPIRVParser::Function>& GetAutocompleteFunctions() { return mACFunctions; }
-	inline const std::unordered_map<std::string, std::vector<ed::SPIRVParser::Variable>>& GetAutocompleteUserTypes() { return mACUserTypes; }
-	inline const std::vector<ed::SPIRVParser::Variable>& GetAutocompleteUniforms() { return mACUniforms; }
-	inline const std::vector<ed::SPIRVParser::Variable>& GetAutocompleteGlobals() { return mACGlobals; }
-	inline void SetAutocompleteFunctions(const std::unordered_map<std::string, ed::SPIRVParser::Function>& funcs)
-	{
-		mACFunctions = funcs;
-	}
-	inline void SetAutocompleteUserTypes(const std::unordered_map<std::string, std::vector<ed::SPIRVParser::Variable>>& utypes)
-	{
-		mACUserTypes = utypes;
-	}
-	inline void SetAutocompleteUniforms(const std::vector<ed::SPIRVParser::Variable>& unis)
-	{
-		mACUniforms = unis;
-	}
-	inline void SetAutocompleteGlobals(const std::vector<ed::SPIRVParser::Variable>& globs)
-	{
-		mACGlobals = globs;
-	}
+        #if IMGUICTE_ENABLE_SPIRV
+        inline void ClearAutocompleteData()
+        {
+                mACFunctions.clear();
+                mACUserTypes.clear();
+                mACUniforms.clear();
+                mACGlobals.clear();
+        }
+        #else
+        inline void ClearAutocompleteData() {}
+        #endif
+        inline void ClearAutocompleteEntries()
+        {
+                mACEntries.clear();
+                mACEntrySearch.clear();
+        }
+        #if IMGUICTE_ENABLE_SPIRV
+        inline const std::unordered_map<std::string, ed::SPIRVParser::Function>& GetAutocompleteFunctions() { return mACFunctions; }
+        inline const std::unordered_map<std::string, std::vector<ed::SPIRVParser::Variable>>& GetAutocompleteUserTypes() { return mACUserTypes; }
+        inline const std::vector<ed::SPIRVParser::Variable>& GetAutocompleteUniforms() { return mACUniforms; }
+        inline const std::vector<ed::SPIRVParser::Variable>& GetAutocompleteGlobals() { return mACGlobals; }
+        inline void SetAutocompleteFunctions(const std::unordered_map<std::string, ed::SPIRVParser::Function>& funcs)
+        {
+                mACFunctions = funcs;
+        }
+        inline void SetAutocompleteUserTypes(const std::unordered_map<std::string, std::vector<ed::SPIRVParser::Variable>>& utypes)
+        {
+                mACUserTypes = utypes;
+        }
+        inline void SetAutocompleteUniforms(const std::vector<ed::SPIRVParser::Variable>& unis)
+        {
+                mACUniforms = unis;
+        }
+        inline void SetAutocompleteGlobals(const std::vector<ed::SPIRVParser::Variable>& globs)
+        {
+                mACGlobals = globs;
+        }
+        #endif
 	inline void AddAutocompleteEntry(const std::string& search, const std::string& display, const std::string& value)
 	{
 		mACEntrySearch.push_back(search);
@@ -609,8 +621,10 @@ private:
 	std::string mFunctionDeclaration;
 	void mOpenFunctionDeclarationTooltip(const std::string& obj, TextEditor::Coordinates coord);
 
-	std::string mBuildFunctionDef(const std::string& func, const std::string& lang);
-	std::string mBuildVariableType(const ed::SPIRVParser::Variable& var, const std::string& lang);
+        std::string mBuildFunctionDef(const std::string& func, const std::string& lang);
+        #if IMGUICTE_ENABLE_SPIRV
+        std::string mBuildVariableType(const ed::SPIRVParser::Variable& var, const std::string& lang);
+        #endif
 
 	float mLineSpacing;
 	Lines mLines;
@@ -654,16 +668,18 @@ private:
 	bool m_requestAutocomplete, m_readyForAutocomplete;
 	void m_buildMemberSuggestions(bool* keepACOpened = nullptr);
 	void m_buildSuggestions(bool* keepACOpened = nullptr);
-	bool mActiveAutocomplete;
-	bool mAutocomplete;
-	std::unordered_map<std::string, ed::SPIRVParser::Function> mACFunctions;
-	std::unordered_map<std::string, std::vector<ed::SPIRVParser::Variable>> mACUserTypes;
-	std::vector<ed::SPIRVParser::Variable> mACUniforms;
-	std::vector<ed::SPIRVParser::Variable> mACGlobals;
-	std::string mACWord;
-	std::vector<std::pair<std::string, std::string>> mACSuggestions;
-	int mACIndex;
-	bool mACOpened;
+        bool mActiveAutocomplete;
+        bool mAutocomplete;
+        #if IMGUICTE_ENABLE_SPIRV
+        std::unordered_map<std::string, ed::SPIRVParser::Function> mACFunctions;
+        std::unordered_map<std::string, std::vector<ed::SPIRVParser::Variable>> mACUserTypes;
+        std::vector<ed::SPIRVParser::Variable> mACUniforms;
+        std::vector<ed::SPIRVParser::Variable> mACGlobals;
+        #endif
+        std::string mACWord;
+        std::vector<std::pair<std::string, std::string>> mACSuggestions;
+        int mACIndex;
+        bool mACOpened;
 	bool mACSwitched;		// if == true then allow selection with enter
 	std::string mACObject;	// if mACObject is not empty, it means user typed '.' -> suggest struct members and methods for mACObject
 	Coordinates mACPosition;

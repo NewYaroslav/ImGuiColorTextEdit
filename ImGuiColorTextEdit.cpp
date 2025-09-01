@@ -10,6 +10,10 @@
 
 #include "ImGuiColorTextEdit.hpp"
 
+#ifndef IMGUICTE_ENABLE_SPIRV
+#define IMGUICTE_ENABLE_SPIRV 0
+#endif
+
 #ifdef max
 	#undef max
 #endif
@@ -2364,153 +2368,158 @@ void TextEditor::RenderInternal(const char* aTitle)
 									OnIdentifierHover(this, id);
 									ImGui::EndTooltip();
 								}
-							} else if (mACFunctions.count(id) && mFuncTooltips) {
-								ImGui::BeginTooltip();
-								ImGui::TextUnformatted(mBuildFunctionDef(id, mLanguageDefinition.mName).c_str());
-								ImGui::EndTooltip();
-							}
+                                                        }
+#if IMGUICTE_ENABLE_SPIRV
+                                                        else if (mACFunctions.count(id) && mFuncTooltips) {
+                                                                ImGui::BeginTooltip();
+                                                                ImGui::TextUnformatted(mBuildFunctionDef(id, mLanguageDefinition.mName).c_str());
+                                                                ImGui::EndTooltip();
+                                                        }
+#endif
 						}
 					}
-					// CTRL + click functionality
-					else {
-						bool hasUnderline = false;
-						bool isHeader = false;
-						bool isFindFirst = false;
-						Coordinates findStart(0, 0);
-						std::string header = "";
-						Coordinates wordStart = FindWordStart(wordCoords);
-						Coordinates wordEnd = FindWordEnd(wordCoords);
+                                        // CTRL + click functionality
+                                        else {
+#if IMGUICTE_ENABLE_SPIRV
+                                                bool hasUnderline = false;
+                                                bool isHeader = false;
+                                                bool isFindFirst = false;
+                                                Coordinates findStart(0, 0);
+                                                std::string header = "";
+                                                Coordinates wordStart = FindWordStart(wordCoords);
+                                                Coordinates wordEnd = FindWordEnd(wordCoords);
 
-						// check if header
-						if (wordStart.mLine >= 0 && wordStart.mLine < mLines.size()) {
-							// get the contents of the line in std::string
-							const auto& line = mLines[wordStart.mLine];
-							std::string text;
-							text.resize(line.size());
-							for (size_t i = 0; i < line.size(); ++i)
-								text[i] = line[i].mChar;
+                                                // check if header
+                                                if (wordStart.mLine >= 0 && wordStart.mLine < mLines.size()) {
+                                                        // get the contents of the line in std::string
+                                                        const auto& line = mLines[wordStart.mLine];
+                                                        std::string text;
+                                                        text.resize(line.size());
+                                                        for (size_t i = 0; i < line.size(); ++i)
+                                                                text[i] = line[i].mChar;
 
-							// find #include
-							size_t includeLoc = text.find("#include");
-							size_t includeStart = std::string::npos, includeEnd = std::string::npos;
-							if (text.size() > 0 && includeLoc != std::string::npos) {
+                                                        // find #include
+                                                        size_t includeLoc = text.find("#include");
+                                                        size_t includeStart = std::string::npos, includeEnd = std::string::npos;
+                                                        if (text.size() > 0 && includeLoc != std::string::npos) {
 
-								for (size_t f = includeLoc; f < text.size(); f++) {
-									if (text[f] == '<' || text[f] == '\"')
-										includeStart = f + 1;
-									else if (text[f] == '>' || text[f] == '\"') {
-										includeEnd = f - 1;
-										break;
-									}
-								}
-							}
+                                                                for (size_t f = includeLoc; f < text.size(); f++) {
+                                                                        if (text[f] == '<' || text[f] == '\"')
+                                                                                includeStart = f + 1;
+                                                                        else if (text[f] == '>' || text[f] == '\"') {
+                                                                                includeEnd = f - 1;
+                                                                                break;
+                                                                        }
+                                                                }
+                                                        }
 
-							if (includeStart != std::string::npos && includeEnd != std::string::npos) {
-								hasUnderline = true;
-								isHeader = true;
-								
-								header = text.substr(includeStart, includeEnd-includeStart + 1);
-								wordStart.mColumn = 0;
-								wordEnd.mColumn = GetCharacterColumn(wordEnd.mLine, line.size());
-							}
-						}
+                                                        if (includeStart != std::string::npos && includeEnd != std::string::npos) {
+                                                                hasUnderline = true;
+                                                                isHeader = true;
 
-						// check if mul, sin, cos, etc...
-						if (!hasUnderline && mLanguageDefinition.mIdentifiers.find(id) != mLanguageDefinition.mIdentifiers.end()) 
-							hasUnderline = true;
+                                                                header = text.substr(includeStart, includeEnd-includeStart + 1);
+                                                                wordStart.mColumn = 0;
+                                                                wordEnd.mColumn = GetCharacterColumn(wordEnd.mLine, line.size());
+                                                        }
+                                                }
 
-						// check if function
-						if (!hasUnderline && mACFunctions.count(id) > 0)
-							hasUnderline = true;
+                                                // check if mul, sin, cos, etc...
+                                                if (!hasUnderline && mLanguageDefinition.mIdentifiers.find(id) != mLanguageDefinition.mIdentifiers.end())
+                                                        hasUnderline = true;
 
-						// check if user type variable
-						if (!hasUnderline && mACUserTypes.count(id) > 0) {
-							hasUnderline = true;
-							isFindFirst = true;
-						}
+                                                // check if function
+                                                if (!hasUnderline && mACFunctions.count(id) > 0)
+                                                        hasUnderline = true;
 
-						// check if local variable
-						if (!hasUnderline) {
-							for (const auto& func : mACFunctions) {
-								if (wordCoords.mLine + 1 >= func.second.LineStart && wordCoords.mLine + 1 <= func.second.LineEnd) {
-									for (const auto& local : func.second.Locals) {
-										if (local.Name == id) {
-											hasUnderline = true;
-											isFindFirst = true;
-											findStart = Coordinates(func.second.LineStart - 1, 0);
-											break;
-										}
-									}
-									break;
-								}
-							}
-						}
+                                                // check if user type variable
+                                                if (!hasUnderline && mACUserTypes.count(id) > 0) {
+                                                        hasUnderline = true;
+                                                        isFindFirst = true;
+                                                }
 
-						// check if global/uniform variable
-						if (!hasUnderline) {
-							for (const auto& glob : mACGlobals)
-								if (glob.Name == id) {
-									hasUnderline = true;
-									isFindFirst = true;
-									break;
-								}
-							for (const auto& unif : mACUniforms) 
-								if (unif.Name == id) {
-									hasUnderline = true;
-									isFindFirst = true;
-									break;
-								}
-						}
+                                                // check if local variable
+                                                if (!hasUnderline) {
+                                                        for (const auto& func : mACFunctions) {
+                                                                if (wordCoords.mLine + 1 >= func.second.LineStart && wordCoords.mLine + 1 <= func.second.LineEnd) {
+                                                                        for (const auto& local : func.second.Locals) {
+                                                                                if (local.Name == id) {
+                                                                                        hasUnderline = true;
+                                                                                        isFindFirst = true;
+                                                                                        findStart = Coordinates(func.second.LineStart - 1, 0);
+                                                                                        break;
+                                                                                }
+                                                                        }
+                                                                        break;
+                                                                }
+                                                        }
+                                                }
 
-						// draw the underline
-						if (hasUnderline) {
-							ImVec2 ulinePos = ImVec2(cursorScreenPos.x + mTextStart, cursorScreenPos.y + wordStart.mLine * mCharAdvance.y);
-							drawList->AddLine(ImVec2(ulinePos.x + wordStart.mColumn * mCharAdvance.x, ulinePos.y + mCharAdvance.y),
-								ImVec2(ulinePos.x + wordEnd.mColumn * mCharAdvance.x, ulinePos.y + mCharAdvance.y),
-								ImGui::GetColorU32(ImGuiCol_HeaderHovered));
-							ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
+                                                // check if global/uniform variable
+                                                if (!hasUnderline) {
+                                                        for (const auto& glob : mACGlobals)
+                                                                if (glob.Name == id) {
+                                                                        hasUnderline = true;
+                                                                        isFindFirst = true;
+                                                                        break;
+                                                                }
+                                                        for (const auto& unif : mACUniforms)
+                                                                if (unif.Name == id) {
+                                                                        hasUnderline = true;
+                                                                        isFindFirst = true;
+                                                                        break;
+                                                                }
+                                                }
 
-							if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
-								if (isHeader) {
-									if (RequestOpen)
-										RequestOpen(this, this->mPath, header);
-								}
-								else {
-									// go to function definition
-									if (mACFunctions.count(id)) {
-										int funcLine = mACFunctions[id].LineStart - 1;
-										if (funcLine > 0 && funcLine < mLines.size()) {
-											mState.mCursorPosition.mLine = funcLine;
-											mState.mCursorPosition.mColumn = 0;
-											EnsureCursorVisible();
-										}
-									}
+                                                // draw the underline
+                                                if (hasUnderline) {
+                                                        ImVec2 ulinePos = ImVec2(cursorScreenPos.x + mTextStart, cursorScreenPos.y + wordStart.mLine * mCharAdvance.y);
+                                                        drawList->AddLine(ImVec2(ulinePos.x + wordStart.mColumn * mCharAdvance.x, ulinePos.y + mCharAdvance.y),
+                                                                ImVec2(ulinePos.x + wordEnd.mColumn * mCharAdvance.x, ulinePos.y + mCharAdvance.y),
+                                                                ImGui::GetColorU32(ImGuiCol_HeaderHovered));
+                                                        ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
 
-									// go to type definition
-									if (isFindFirst) {
-										if (!ImGui::GetIO().KeyAlt) {
-											Coordinates userTypeLoc = FindFirst(id, findStart);
-											if (userTypeLoc.mLine >= 0 && userTypeLoc.mLine < mLines.size()) {
-												mState.mCursorPosition = userTypeLoc;
-												SetSelectionStart(userTypeLoc);
-												SetSelectionEnd(FindWordEnd(userTypeLoc));
-												EnsureCursorVisible();
-											}
-										}
-										else {
-											if (OnCtrlAltClick) 
-												this->OnCtrlAltClick(this, id, wordCoords);
-										}
-									}
+                                                        if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+                                                                if (isHeader) {
+                                                                        if (RequestOpen)
+                                                                                RequestOpen(this, this->mPath, header);
+                                                                }
+                                                                else {
+                                                                        // go to function definition
+                                                                        if (mACFunctions.count(id)) {
+                                                                                int funcLine = mACFunctions[id].LineStart - 1;
+                                                                                if (funcLine > 0 && funcLine < mLines.size()) {
+                                                                                        mState.mCursorPosition.mLine = funcLine;
+                                                                                        mState.mCursorPosition.mColumn = 0;
+                                                                                        EnsureCursorVisible();
+                                                                                }
+                                                                        }
 
-									// TODO: identifier documentation
-								}
-							}
-						}
-					}
-				}
-			}
-		}
+                                                                        // go to type definition
+                                                                        if (isFindFirst) {
+                                                                                if (!ImGui::GetIO().KeyAlt) {
+                                                                                        Coordinates userTypeLoc = FindFirst(id, findStart);
+                                                                                        if (userTypeLoc.mLine >= 0 && userTypeLoc.mLine < mLines.size()) {
+                                                                                                mState.mCursorPosition = userTypeLoc;
+                                                                                                SetSelectionStart(userTypeLoc);
+                                                                                                SetSelectionEnd(FindWordEnd(userTypeLoc));
+                                                                                                EnsureCursorVisible();
+                                                                                        }
+                                                                                }
+                                                                                else {
+                                                                                        if (OnCtrlAltClick)
+                                                                                                this->OnCtrlAltClick(this, id, wordCoords);
+                                                                                }
+                                                                        }
+
+                                                                        // TODO: identifier documentation
+                                                                }
+                                                        }
+                                                }
+#endif
+                                        }
+                                }
+                        }
+                }
 	}
 
 	// function tooltip
@@ -2617,90 +2626,103 @@ void TextEditor::RenderInternal(const char* aTitle)
 	}
 }
 
+#if IMGUICTE_ENABLE_SPIRV
 void TextEditor::mOpenFunctionDeclarationTooltip(const std::string& obj, TextEditor::Coordinates coord)
 {
-	if (mACFunctions.count(obj)) {
-		mFunctionDeclarationTooltip = true;
-		mFunctionDeclarationCoord = FindWordStart(coord);
-		mFunctionDeclaration = mBuildFunctionDef(obj, mLanguageDefinition.mName);
-	}
+        if (mACFunctions.count(obj)) {
+                mFunctionDeclarationTooltip = true;
+                mFunctionDeclarationCoord = FindWordStart(coord);
+                mFunctionDeclaration = mBuildFunctionDef(obj, mLanguageDefinition.mName);
+        }
 }
 
 std::string TextEditor::mBuildFunctionDef(const std::string& func, const std::string& lang)
 {
-	if (mACFunctions.count(func) == 0)
-		return "";
+        if (mACFunctions.count(func) == 0)
+                return "";
 
-	const auto& funcDef = mACFunctions[func];
+        const auto& funcDef = mACFunctions[func];
 
-	std::string ret = mBuildVariableType(funcDef.ReturnType, lang) + " " + func + "(";
+        std::string ret = mBuildVariableType(funcDef.ReturnType, lang) + " " + func + "(";
 
-	for (size_t i = 0; i < funcDef.Arguments.size(); i++) {
-		ret += mBuildVariableType(funcDef.Arguments[i], lang) + " " + funcDef.Arguments[i].Name;
+        for (size_t i = 0; i < funcDef.Arguments.size(); i++) {
+                ret += mBuildVariableType(funcDef.Arguments[i], lang) + " " + funcDef.Arguments[i].Name;
 
-		if (i != funcDef.Arguments.size() - 1)
-			ret += ", ";
-	}
+                if (i != funcDef.Arguments.size() - 1)
+                        ret += ", ";
+        }
 
-	return ret + ")";
+        return ret + ")";
 }
+#else
+void TextEditor::mOpenFunctionDeclarationTooltip(const std::string&, TextEditor::Coordinates) {}
+std::string TextEditor::mBuildFunctionDef(const std::string&, const std::string&) { return std::string(); }
+#endif
+#if IMGUICTE_ENABLE_SPIRV
 std::string TextEditor::mBuildVariableType(const ed::SPIRVParser::Variable& var, const std::string& lang)
 {
-	switch (var.Type) {
-		case ed::SPIRVParser::ValueType::Bool:
-			return "bool";
+        switch (var.Type) {
+                case ed::SPIRVParser::ValueType::Bool:
+                        return "bool";
 
-		case ed::SPIRVParser::ValueType::Float:
-			return "float";
+                case ed::SPIRVParser::ValueType::Float:
+                        return "float";
 
-		case ed::SPIRVParser::ValueType::Int:
-			return "int";
+                case ed::SPIRVParser::ValueType::Int:
+                        return "int";
 
-		case ed::SPIRVParser::ValueType::Void:
-			return "void";
+                case ed::SPIRVParser::ValueType::Void:
+                        return "void";
 
-		case ed::SPIRVParser::ValueType::Struct:
-			return var.TypeName;
+                case ed::SPIRVParser::ValueType::Struct:
+                        return var.TypeName;
 
-		case ed::SPIRVParser::ValueType::Vector: {
-			std::string count = std::string(1, var.TypeComponentCount + '0');
-			if (lang == "HLSL") {
-				switch (var.BaseType) {
-				case ed::SPIRVParser::ValueType::Bool:
-					return "bool" + count;
+                case ed::SPIRVParser::ValueType::Vector: {
+                        std::string count = std::string(1, var.TypeComponentCount + '0');
+                        if (lang == "HLSL") {
+                                switch (var.BaseType) {
+                                case ed::SPIRVParser::ValueType::Bool:
+                                        return "bool" + count;
 
-				case ed::SPIRVParser::ValueType::Float:
-					return "float" + count;
+                                case ed::SPIRVParser::ValueType::Float:
+                                        return "float" + count;
 
-				case ed::SPIRVParser::ValueType::Int:
-					return "int" + count;
-				}
-			} else {
-				switch (var.BaseType) {
-				case ed::SPIRVParser::ValueType::Bool:
-					return "bvec" + count;
+                                case ed::SPIRVParser::ValueType::Int:
+                                        return "int" + count;
+                                }
+                        } else {
+                                switch (var.BaseType) {
+                                case ed::SPIRVParser::ValueType::Bool:
+                                        return "bvec" + count;
 
-				case ed::SPIRVParser::ValueType::Float:
-					return "vec" + count;
+                                case ed::SPIRVParser::ValueType::Float:
+                                        return "vec" + count;
 
-				case ed::SPIRVParser::ValueType::Int:
-					return "ivec" + count;
-				}
-			}
-		} break;
+                                case ed::SPIRVParser::ValueType::Int:
+                                        return "ivec" + count;
+                                }
+                        }
+                } break;
 
-		case ed::SPIRVParser::ValueType::Matrix: {
-			std::string count = std::string(1, var.TypeComponentCount + '0');
-			if (lang == "HLSL") {
-				return "float" + count + "x" + count;
-			} else {
-				return "mat" + count;
-			}
-		} break;
-	}
+                case ed::SPIRVParser::ValueType::Matrix: {
+                        std::string count = std::string(1, var.TypeComponentCount + '0');
+                        if (lang == "HLSL") {
+                                return "float" + count + "x" + count;
+                        } else {
+                                return "mat" + count;
+                        }
+                } break;
+        }
 
-	return "";
+        return "";
 }
+#else
+namespace ed { class SPIRVParser { public: struct Variable; enum class ValueType : int; }; }
+std::string TextEditor::mBuildVariableType(const ed::SPIRVParser::Variable&, const std::string&)
+{
+        return std::string();
+}
+#endif
 
 void TextEditor::mRemoveFolds(const Coordinates& aStart, const Coordinates& aEnd)
 {
@@ -2929,241 +2951,249 @@ void TextEditor::mAutocompleteSelect()
 
 void TextEditor::m_buildMemberSuggestions(bool* keepACOpened)
 {
-	mACSuggestions.clear();
+#if !IMGUICTE_ENABLE_SPIRV
+        (void)keepACOpened;
+        mACSuggestions.clear();
+        return;
+#else
+        mACSuggestions.clear();
 
-	auto curPos = GetCorrectCursorPosition();
-	std::string obj = GetWordAt(curPos);
+        auto curPos = GetCorrectCursorPosition();
+        std::string obj = GetWordAt(curPos);
 
-	ed::SPIRVParser::Variable* var = nullptr;
+        ed::SPIRVParser::Variable* var = nullptr;
 
-	for (auto& func : mACFunctions) {
-		// suggest arguments and locals
-		if (mState.mCursorPosition.mLine >= func.second.LineStart - 2 && mState.mCursorPosition.mLine <= func.second.LineEnd + 1) {
-			// locals
-			for (auto& loc : func.second.Locals)
-				if (strcmp(loc.Name.c_str(), obj.c_str()) == 0) {
-					var = &loc;
-					break;
-				}
+        for (auto& func : mACFunctions) {
+                // suggest arguments and locals
+                if (mState.mCursorPosition.mLine >= func.second.LineStart - 2 && mState.mCursorPosition.mLine <= func.second.LineEnd + 1) {
+                        // locals
+                        for (auto& loc : func.second.Locals)
+                                if (strcmp(loc.Name.c_str(), obj.c_str()) == 0) {
+                                        var = &loc;
+                                        break;
+                                }
 
-			// arguments
-			if (var == nullptr) {
-				for (auto& arg : func.second.Arguments)
-					if (strcmp(arg.Name.c_str(), obj.c_str()) == 0) {
-						var = &arg;
-						break;
-					}
-			}
-		}
-	}
-	if (var == nullptr) {
-		for (auto& uni : mACUniforms)
-			if (strcmp(uni.Name.c_str(), obj.c_str()) == 0) {
-				var = &uni;
-				break;
-			}
-	}
-	if (var == nullptr) {
-		for (auto& glob : mACGlobals)
-			if (strcmp(glob.Name.c_str(), obj.c_str()) == 0) {
-				var = &glob;
-				break;
-			}
-	}
+                        // arguments
+                        if (var == nullptr) {
+                                for (auto& arg : func.second.Arguments)
+                                        if (strcmp(arg.Name.c_str(), obj.c_str()) == 0) {
+                                                var = &arg;
+                                                break;
+                                        }
+                        }
+                }
+        }
+        if (var == nullptr) {
+                for (auto& uni : mACUniforms)
+                        if (strcmp(uni.Name.c_str(), obj.c_str()) == 0) {
+                                var = &uni;
+                                break;
+                        }
+        }
+        if (var == nullptr) {
+                for (auto& glob : mACGlobals)
+                        if (strcmp(glob.Name.c_str(), obj.c_str()) == 0) {
+                                var = &glob;
+                                break;
+                        }
+        }
 
-	if (var != nullptr) {
-		mACIndex = 0;
-		mACSwitched = false;
+        if (var != nullptr) {
+                mACIndex = 0;
+                mACSwitched = false;
 
-		if (var->TypeName.size() > 0 && var->TypeName[0] != 0) {
-			for (const auto& uType : mACUserTypes) {
-				if (uType.first == var->TypeName) {
-					for (const auto& uMember : uType.second)
-						mACSuggestions.push_back(std::make_pair(uMember.Name, uMember.Name));
-				}
-			}
+                if (var->TypeName.size() > 0 && var->TypeName[0] != 0) {
+                        for (const auto& uType : mACUserTypes) {
+                                if (uType.first == var->TypeName) {
+                                        for (const auto& uMember : uType.second)
+                                                mACSuggestions.push_back(std::make_pair(uMember.Name, uMember.Name));
+                                }
+                        }
 
-			if (mACSuggestions.size() > 0)
-				mACObject = var->TypeName;
-		}
-	}
+                        if (mACSuggestions.size() > 0)
+                                mACObject = var->TypeName;
+                }
+        }
 
-	if (mACSuggestions.size() > 0) {
-		mACOpened = true;
-		mACWord = "";
+        if (mACSuggestions.size() > 0) {
+                mACOpened = true;
+                mACWord = "";
 
-		if (keepACOpened != nullptr)
-			*keepACOpened = true;
+                if (keepACOpened != nullptr)
+                        *keepACOpened = true;
 
-		Coordinates curCursor = GetCursorPosition();
+                Coordinates curCursor = GetCursorPosition();
 
-		mACPosition = FindWordStart(curCursor);
-	}
+                mACPosition = FindWordStart(curCursor);
+        }
+#endif
 }
+// AUTOCOMPLETE SUGGESTIONS
+#if IMGUICTE_ENABLE_SPIRV
 void TextEditor::m_buildSuggestions(bool* keepACOpened)
 {
-	mACWord = GetWordUnderCursor();
+        mACWord = GetWordUnderCursor();
 
-	bool isValid = false;
-	for (int i = 0; i < mACWord.size(); i++)
-		if ((mACWord[i] >= 'a' && mACWord[i] <= 'z') || (mACWord[i] >= 'A' && mACWord[i] <= 'Z')) {
-			isValid = true;
-			break;
-		}
+        bool isValid = false;
+        for (int i = 0; i < mACWord.size(); i++)
+                if ((mACWord[i] >= 'a' && mACWord[i] <= 'z') || (mACWord[i] >= 'A' && mACWord[i] <= 'Z')) {
+                        isValid = true;
+                        break;
+                }
 
-	if (isValid) {
-		mACSuggestions.clear();
-		mACIndex = 0;
-		mACSwitched = false;
+        if (isValid) {
+                mACSuggestions.clear();
+                mACIndex = 0;
+                mACSwitched = false;
 
-		std::string acWord = mACWord;
-		std::transform(acWord.begin(), acWord.end(), acWord.begin(), tolower);
+                std::string acWord = mACWord;
+                std::transform(acWord.begin(), acWord.end(), acWord.begin(), tolower);
 
-		struct ACEntry {
-			ACEntry(const std::string& str, const std::string& val, int loc)
-			{
-				DisplayString = str;
-				Value = val;
-				Location = loc;
-			}
+                struct ACEntry {
+                        ACEntry(const std::string& str, const std::string& val, int loc)
+                        {
+                                DisplayString = str;
+                                Value = val;
+                                Location = loc;
+                        }
 
-			std::string DisplayString;
-			std::string Value;
-			int Location;
-		};
-		std::vector<ACEntry> weights;
+                        std::string DisplayString;
+                        std::string Value;
+                        int Location;
+                };
+                std::vector<ACEntry> weights;
 
-		if (mACObject.empty()) {
-			// get the words
-			for (int i = 0; i < mACEntrySearch.size(); i++) {
-				std::string lwrStr = mACEntrySearch[i];
-				std::transform(lwrStr.begin(), lwrStr.end(), lwrStr.begin(), tolower);
+                if (mACObject.empty()) {
+                        // get the words
+                        for (int i = 0; i < mACEntrySearch.size(); i++) {
+                                std::string lwrStr = mACEntrySearch[i];
+                                std::transform(lwrStr.begin(), lwrStr.end(), lwrStr.begin(), tolower);
 
-				size_t loc = lwrStr.find(acWord);
-				if (loc != std::string::npos)
-					weights.push_back(ACEntry(mACEntries[i].first, mACEntries[i].second, loc));
-			}
-			for (auto& func : mACFunctions) {
-				std::string lwrStr = func.first;
-				std::transform(lwrStr.begin(), lwrStr.end(), lwrStr.begin(), tolower);
+                                size_t loc = lwrStr.find(acWord);
+                                if (loc != std::string::npos)
+                                        weights.push_back(ACEntry(mACEntries[i].first, mACEntries[i].second, loc));
+                        }
+                        for (auto& func : mACFunctions) {
+                                std::string lwrStr = func.first;
+                                std::transform(lwrStr.begin(), lwrStr.end(), lwrStr.begin(), tolower);
 
-				// suggest arguments and locals
-				if (mState.mCursorPosition.mLine >= func.second.LineStart - 2 && mState.mCursorPosition.mLine <= func.second.LineEnd + 1) {
+                                // suggest arguments and locals
+                                if (mState.mCursorPosition.mLine >= func.second.LineStart - 2 && mState.mCursorPosition.mLine <= func.second.LineEnd + 1) {
 
-					// locals
-					for (auto& loc : func.second.Locals) {
-						std::string lwrLoc = loc.Name;
-						std::transform(lwrLoc.begin(), lwrLoc.end(), lwrLoc.begin(), tolower);
+                                        // locals
+                                        for (auto& loc : func.second.Locals) {
+                                                std::string lwrLoc = loc.Name;
+                                                std::transform(lwrLoc.begin(), lwrLoc.end(), lwrLoc.begin(), tolower);
 
-						size_t location = lwrLoc.find(acWord);
-						if (location != std::string::npos)
-							weights.push_back(ACEntry(loc.Name, loc.Name, location));
-					}
+                                                size_t location = lwrLoc.find(acWord);
+                                                if (location != std::string::npos)
+                                                        weights.push_back(ACEntry(loc.Name, loc.Name, location));
+                                        }
 
-					// arguments
-					for (auto& arg : func.second.Arguments) {
-						std::string lwrLoc = arg.Name;
-						std::transform(lwrLoc.begin(), lwrLoc.end(), lwrLoc.begin(), tolower);
+                                        // arguments
+                                        for (auto& arg : func.second.Arguments) {
+                                                std::string lwrLoc = arg.Name;
+                                                std::transform(lwrLoc.begin(), lwrLoc.end(), lwrLoc.begin(), tolower);
 
-						size_t loc = lwrLoc.find(acWord);
-						if (loc != std::string::npos)
-							weights.push_back(ACEntry(arg.Name, arg.Name, loc));
-					}
-				}
+                                                size_t loc = lwrLoc.find(acWord);
+                                                if (loc != std::string::npos)
+                                                        weights.push_back(ACEntry(arg.Name, arg.Name, loc));
+                                        }
+                                }
 
-				size_t loc = lwrStr.find(acWord);
-				if (loc != std::string::npos) {
-					std::string val = func.first;
-					if (mCompleteBraces) val += "()";
-					weights.push_back(ACEntry(func.first, val, loc));
-				}
-			}
-			for (auto& uni : mACUniforms) {
-				std::string lwrStr = uni.Name;
-				std::transform(lwrStr.begin(), lwrStr.end(), lwrStr.begin(), tolower);
+                                size_t loc = lwrStr.find(acWord);
+                                if (loc != std::string::npos) {
+                                        std::string val = func.first;
+                                        if (mCompleteBraces) val += "()";
+                                        weights.push_back(ACEntry(func.first, val, loc));
+                                }
+                        }
+                        for (auto& uni : mACUniforms) {
+                                std::string lwrStr = uni.Name;
+                                std::transform(lwrStr.begin(), lwrStr.end(), lwrStr.begin(), tolower);
 
-				size_t loc = lwrStr.find(acWord);
-				if (loc != std::string::npos)
-					weights.push_back(ACEntry(uni.Name, uni.Name, loc));
-			}
-			for (auto& glob : mACGlobals) {
-				std::string lwrStr = glob.Name;
-				std::transform(lwrStr.begin(), lwrStr.end(), lwrStr.begin(), tolower);
+                                size_t loc = lwrStr.find(acWord);
+                                if (loc != std::string::npos)
+                                        weights.push_back(ACEntry(uni.Name, uni.Name, loc));
+                        }
+                        for (auto& glob : mACGlobals) {
+                                std::string lwrStr = glob.Name;
+                                std::transform(lwrStr.begin(), lwrStr.end(), lwrStr.begin(), tolower);
 
-				size_t loc = lwrStr.find(acWord);
-				if (loc != std::string::npos)
-					weights.push_back(ACEntry(glob.Name, glob.Name, loc));
-			}
-			for (auto& utype : mACUserTypes) {
-				std::string lwrStr = utype.first;
-				std::transform(lwrStr.begin(), lwrStr.end(), lwrStr.begin(), tolower);
+                                size_t loc = lwrStr.find(acWord);
+                                if (loc != std::string::npos)
+                                        weights.push_back(ACEntry(glob.Name, glob.Name, loc));
+                        }
+                        for (auto& utype : mACUserTypes) {
+                                std::string lwrStr = utype.first;
+                                std::transform(lwrStr.begin(), lwrStr.end(), lwrStr.begin(), tolower);
 
-				size_t loc = lwrStr.find(acWord);
-				if (loc != std::string::npos)
-					weights.push_back(ACEntry(utype.first, utype.first, loc));
-			}
-			for (auto& str : mLanguageDefinition.mKeywords) {
-				std::string lwrStr = str;
-				std::transform(lwrStr.begin(), lwrStr.end(), lwrStr.begin(), tolower);
+                                size_t loc = lwrStr.find(acWord);
+                                if (loc != std::string::npos)
+                                        weights.push_back(ACEntry(utype.first, utype.first, loc));
+                        }
+                        for (auto& str : mLanguageDefinition.mKeywords) {
+                                std::string lwrStr = str;
+                                std::transform(lwrStr.begin(), lwrStr.end(), lwrStr.begin(), tolower);
 
-				size_t loc = lwrStr.find(acWord);
-				if (loc != std::string::npos)
-					weights.push_back(ACEntry(str, str, loc));
-			}
-			for (auto& str : mLanguageDefinition.mIdentifiers) {
-				std::string lwrStr = str.first;
-				std::transform(lwrStr.begin(), lwrStr.end(), lwrStr.begin(), tolower);
+                                size_t loc = lwrStr.find(acWord);
+                                if (loc != std::string::npos)
+                                        weights.push_back(ACEntry(str, str, loc));
+                        }
+                        for (auto& str : mLanguageDefinition.mIdentifiers) {
+                                std::string lwrStr = str.first;
+                                std::transform(lwrStr.begin(), lwrStr.end(), lwrStr.begin(), tolower);
 
-				size_t loc = lwrStr.find(acWord);
-				if (loc != std::string::npos) {
-					std::string val = str.first;
-					if (mCompleteBraces) val += "()";
-					weights.push_back(ACEntry(str.first, val, loc));
-				}
-			}
-		}
-		else {
-			for (const auto& uType : mACUserTypes) {
-				if (uType.first == mACObject) {
-					for (const auto& uMember : uType.second) {
+                                size_t loc = lwrStr.find(acWord);
+                                if (loc != std::string::npos) {
+                                        std::string val = str.first;
+                                        if (mCompleteBraces) val += "()";
+                                        weights.push_back(ACEntry(str.first, val, loc));
+                                }
+                        }
+                }
+                else {
+                        for (const auto& uType : mACUserTypes) {
+                                if (uType.first == mACObject) {
+                                        for (const auto& uMember : uType.second) {
 
-						std::string lwrStr = uMember.Name;
-						std::transform(lwrStr.begin(), lwrStr.end(), lwrStr.begin(), tolower);
+                                                std::string lwrStr = uMember.Name;
+                                                std::transform(lwrStr.begin(), lwrStr.end(), lwrStr.begin(), tolower);
 
-						size_t loc = lwrStr.find(acWord);
-						if (loc != std::string::npos)
-							weights.push_back(ACEntry(uMember.Name, uMember.Name, loc));
-					}
-				}
-			}
+                                                size_t loc = lwrStr.find(acWord);
+                                                if (loc != std::string::npos)
+                                                        weights.push_back(ACEntry(uMember.Name, uMember.Name, loc));
+                                        }
+                                }
+                        }
 
-		}
+                }
 
-		// build the actual list
-		for (const auto& entry : weights)
-			if (entry.Location == 0)
-				mACSuggestions.push_back(std::make_pair(entry.DisplayString, entry.Value));
-		for (const auto& entry : weights)
-			if (entry.Location != 0)
-				mACSuggestions.push_back(std::make_pair(entry.DisplayString, entry.Value));
+                // build the actual list
+                for (const auto& entry : weights)
+                        if (entry.Location == 0)
+                                mACSuggestions.push_back(std::make_pair(entry.DisplayString, entry.Value));
+                for (const auto& entry : weights)
+                        if (entry.Location != 0)
+                                mACSuggestions.push_back(std::make_pair(entry.DisplayString, entry.Value));
 
-		
-		if (mACSuggestions.size() > 0) {
-			mACOpened = true;
 
-			if (keepACOpened != nullptr)
-				*keepACOpened = true;
+                if (mACSuggestions.size() > 0) {
+                        mACOpened = true;
 
-			Coordinates curCursor = GetCursorPosition();
-			curCursor.mColumn--;
+                        if (keepACOpened != nullptr)
+                                *keepACOpened = true;
 
-			mACPosition = FindWordStart(curCursor);
-		}
-	}
+                        Coordinates curCursor = GetCursorPosition();
+                        curCursor.mColumn--;
 
-	
-	
+                        mACPosition = FindWordStart(curCursor);
+                }
+        }
 }
+#else
+void TextEditor::m_buildSuggestions(bool* keepACOpened) { (void)keepACOpened; }
+#endif
 
 ImVec2 TextEditor::CoordinatesToScreenPos(const TextEditor::Coordinates& aPosition) const
 {
@@ -5213,72 +5243,74 @@ void TextEditor::ColorizeRange(int aFromLine, int aToLine)
 							token_color = PaletteIndex::KnownIdentifier;
 						else if (mLanguageDefinition.mPreprocIdentifiers.count(id) != 0)
 							token_color = PaletteIndex::PreprocIdentifier;
-						else {
-							bool found = false;
-							
-							// functions, arguments, local variables
-							for (const auto& func : mACFunctions) {
-								if (strcmp(func.first.c_str(), id.c_str()) == 0) {
-									token_color = PaletteIndex::UserFunction;
-									found = true;
-									break;
-								}
+                                                else {
+#if IMGUICTE_ENABLE_SPIRV
+                                                        bool found = false;
 
-								if (i >= func.second.LineStart - 3 && i <= func.second.LineEnd + 1) {
-									for (const auto& arg : func.second.Arguments) {
-										if (strcmp(arg.Name.c_str(), id.c_str()) == 0) {
-											token_color = PaletteIndex::FunctionArgument;
-											found = true;
-											break;
-										}
-									}
-									if (!found) {
-										for (const auto& loc : func.second.Locals) {
-											if (strcmp(loc.Name.c_str(), id.c_str()) == 0) {
-												token_color = PaletteIndex::LocalVariable;
-												found = true;
-												break;
-											}
-										}
-										if (found) break;
-									} else
-										break;
-								}
-							}
+                                                        // functions, arguments, local variables
+                                                        for (const auto& func : mACFunctions) {
+                                                                if (strcmp(func.first.c_str(), id.c_str()) == 0) {
+                                                                        token_color = PaletteIndex::UserFunction;
+                                                                        found = true;
+                                                                        break;
+                                                                }
 
-							// uniforms
-							if (!found) {
-								for (const auto& unif : mACUniforms) {
-									if (strcmp(unif.Name.c_str(), id.c_str()) == 0) {
-										token_color = PaletteIndex::UniformVariable;
-										found = true;
-										break;
-									}
-								}
-							}
+                                                                if (i >= func.second.LineStart - 3 && i <= func.second.LineEnd + 1) {
+                                                                        for (const auto& arg : func.second.Arguments) {
+                                                                                if (strcmp(arg.Name.c_str(), id.c_str()) == 0) {
+                                                                                        token_color = PaletteIndex::FunctionArgument;
+                                                                                        found = true;
+                                                                                        break;
+                                                                                }
+                                                                        }
+                                                                        if (!found) {
+                                                                                for (const auto& loc : func.second.Locals) {
+                                                                                        if (strcmp(loc.Name.c_str(), id.c_str()) == 0) {
+                                                                                                token_color = PaletteIndex::LocalVariable;
+                                                                                                found = true;
+                                                                                                break;
+                                                                                        }
+                                                                                }
+                                                                                if (found) break;
+                                                                        } else
+                                                                                break;
+                                                                }
+                                                        }
 
-							// globals
-							if (!found) {
-								for (const auto& glob : mACGlobals) {
-									if (strcmp(glob.Name.c_str(), id.c_str()) == 0) {
-										token_color = PaletteIndex::GlobalVariable;
-										found = true;
-										break;
-									}
-								}
-							}
+                                                        // uniforms
+                                                        if (!found) {
+                                                                for (const auto& unif : mACUniforms) {
+                                                                        if (strcmp(unif.Name.c_str(), id.c_str()) == 0) {
+                                                                                token_color = PaletteIndex::UniformVariable;
+                                                                                found = true;
+                                                                                break;
+                                                                        }
+                                                                }
+                                                        }
 
-							// user types
-							if (!found) {
-								for (const auto& userType : mACUserTypes) {
-									if (strcmp(userType.first.c_str(), id.c_str()) == 0) {
-										token_color = PaletteIndex::UserType;
-										found = true;
-										break;
-									}
-								}
-							}
-						}
+                                                        // globals
+                                                        if (!found) {
+                                                                for (const auto& glob : mACGlobals) {
+                                                                        if (strcmp(glob.Name.c_str(), id.c_str()) == 0) {
+                                                                                token_color = PaletteIndex::GlobalVariable;
+                                                                                found = true;
+                                                                                break;
+                                                                        }
+                                                                }
+                                                        }
+
+                                                        // user types
+                                                        if (!found) {
+                                                                for (const auto& userType : mACUserTypes) {
+                                                                        if (strcmp(userType.first.c_str(), id.c_str()) == 0) {
+                                                                                token_color = PaletteIndex::UserType;
+                                                                                found = true;
+                                                                                break;
+                                                                        }
+                                                                }
+                                                        }
+#endif
+                                                }
 					}
 					else
 					{
@@ -6267,36 +6299,48 @@ void TextEditor::LanguageDefinition::m_GLSLDocumentation(Identifiers& idents)
 
 const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::SPIRV()
 {
-	static bool inited = false;
-	static LanguageDefinition langDef;
-	if (!inited) {
-		/*
-		langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[ \\t]*#[ \\t]*[a-zA-Z_]+", PaletteIndex::Preprocessor));
-		langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("\\'\\\\?[^\\']\\'", PaletteIndex::CharLiteral));
-		langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[a-zA-Z_][a-zA-Z0-9_]*", PaletteIndex::Identifier));
-		langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", PaletteIndex::Punctuation));
-		*/
+#if IMGUICTE_ENABLE_SPIRV
+        static bool inited = false;
+        static LanguageDefinition langDef;
+        if (!inited) {
+                /*
+                langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[ \\t]*#[ \\t]*[a-zA-Z_]+", PaletteIndex::Preprocessor));
+                langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("\\'\\\\?[^\\']\\'", PaletteIndex::CharLiteral));
+                langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[a-zA-Z_][a-zA-Z0-9_]*", PaletteIndex::Identifier));
+                langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", PaletteIndex::Punctuation));
+                */
 
-		langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("L?\\\"(\\\\.|[^\\\"])*\\\"", PaletteIndex::String));
-		langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[ =\\t]Op[a-zA-Z]*", PaletteIndex::Keyword));
-		langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("%[_a-zA-Z0-9]*", PaletteIndex::Identifier));
-		langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?", PaletteIndex::Number));
-		langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[+-]?[0-9]+[Uu]?[lL]?[lL]?", PaletteIndex::Number));
-		langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("0[0-7]+[Uu]?[lL]?[lL]?", PaletteIndex::Number));
-		langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", PaletteIndex::Number));
-		
-		langDef.mCommentStart = "/*";
-		langDef.mCommentEnd = "*/";
-		langDef.mSingleLineComment = ";";
+                langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("L?\\\"(\\\\.|[^\\\"])*\\\"", PaletteIndex::String));
+                langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[ =\\t]Op[a-zA-Z]*", PaletteIndex::Keyword));
+                langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("%[_a-zA-Z0-9]*", PaletteIndex::Identifier));
+                langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?", PaletteIndex::Number));
+                langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[+-]?[0-9]+[Uu]?[lL]?[lL]?", PaletteIndex::Number));
+                langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("0[0-7]+[Uu]?[lL]?[lL]?", PaletteIndex::Number));
+                langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", PaletteIndex::Number));
 
-		langDef.mCaseSensitive = true;
-		langDef.mAutoIndentation = false;
+                langDef.mCommentStart = "/*";
+                langDef.mCommentEnd = "*/";
+                langDef.mSingleLineComment = ";";
 
-		langDef.mName = "SPIR-V";
+                langDef.mCaseSensitive = true;
+                langDef.mAutoIndentation = false;
 
-		inited = true;
-	}
-	return langDef;
+                langDef.mName = "SPIR-V";
+
+                inited = true;
+        }
+        return langDef;
+#else
+        static bool inited = false;
+        static LanguageDefinition langDef;
+        if (!inited) {
+                langDef.mName = "SPIR-V";
+                langDef.mCaseSensitive = true;
+                langDef.mAutoIndentation = false;
+                inited = true;
+        }
+        return langDef;
+#endif
 }
 
 const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::C()
