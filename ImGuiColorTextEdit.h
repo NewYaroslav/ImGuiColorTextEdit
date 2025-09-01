@@ -20,6 +20,8 @@
 #include <SHADERed/Objects/SPIRVParser.h>
 #endif
 
+/// \brief Interactive text editor with syntax highlighting for ImGui.
+/// \note Right-to-left scripts and complex text shaping are not supported.
 class TextEditor {
 public:
     enum class PaletteIndex {
@@ -123,17 +125,22 @@ public:
     static const int LineNumberSpace = 20;
     static const int DebugDataSpace = 10;
 
+    /// \brief Keyboard shortcut description.
     struct Shortcut {
-        // 0 - not used, 1 - used
-        bool Alt;
-        bool Ctrl;
-        bool Shift;
+        bool Alt;   ///< Non-zero if Alt modifier is used.
+        bool Ctrl;  ///< Non-zero if Ctrl modifier is used.
+        bool Shift; ///< Non-zero if Shift modifier is used.
 
-        // -1 - not used, everything else: Win32 VK_ code
-        int Key1;
-        int Key2;
+        int Key1; ///< First key, Win32 VK code (\-1 if unused).
+        int Key2; ///< Second key, Win32 VK code (\-2 if unused).
 
-        Shortcut(int vk1 = -1, int vk2 = -2, bool alt = 0, bool ctrl = 0, bool shift = 0)
+        /// \brief Construct a shortcut definition.
+        /// \param vk1 First key as Win32 VK code or \-1 if unused.
+        /// \param vk2 Second key as Win32 VK code or \-2 if unused.
+        /// \param alt Set to true to require the Alt modifier.
+        /// \param ctrl Set to true to require the Ctrl modifier.
+        /// \param shift Set to true to require the Shift modifier.
+        Shortcut(int vk1 = -1, int vk2 = -2, bool alt = false, bool ctrl = false, bool shift = false)
                 : Key1(vk1)
                 , Key2(vk2)
                 , Alt(alt)
@@ -149,11 +156,12 @@ public:
         Line
     };
 
+    /// \brief Represents a debugger breakpoint.
     struct Breakpoint {
-        int mLine;
-        bool mEnabled;
-        bool mUseCondition;
-        std::string mCondition;
+        int mLine;              ///< Line index where the breakpoint is located.
+        bool mEnabled;          ///< Indicates whether the breakpoint is enabled.
+        bool mUseCondition;     ///< True if a conditional expression is evaluated.
+        std::string mCondition; ///< Conditional expression evaluated at runtime.
 
         Breakpoint()
                 : mLine(-1)
@@ -162,15 +170,13 @@ public:
         }
     };
 
-    // Represents a character coordinate from the user's point of view,
-    // i. e. consider an uniform grid (assuming fixed-width font) on the
-    // screen as it is rendered, and each cell has its own coordinate, starting from 0.
-    // Tabs are counted as [1..mTabSize] count empty spaces, depending on
-    // how many space is necessary to reach the next tab stop.
-    // For example, coordinate (1, 5) represents the character 'B' in a line "\tABC", when mTabSize = 4,
-    // because it is rendered as "    ABC" on the screen.
+    /// \brief Character position within the displayed text.
+    /// \details Uses a zero-based grid on the rendered text; tabs advance to the next tab stop
+    /// depending on \ref mTabSize. For example, coordinate (1,5) refers to the character 'B' in "\tABC"
+    /// when \ref mTabSize equals 4.
     struct Coordinates {
-        int mLine, mColumn;
+        int mLine;   ///< Zero-based line index.
+        int mColumn; ///< Zero-based column index.
         Coordinates()
                 : mLine(0)
                 , mColumn(0)
@@ -228,6 +234,7 @@ public:
         }
     };
 
+    /// \brief Describes an identifier declaration.
     struct Identifier {
         Identifier() {}
         Identifier(const std::string& declr)
@@ -235,8 +242,8 @@ public:
         {
         }
 
-        Coordinates mLocation;
-        std::string mDeclaration;
+        Coordinates mLocation;   ///< Location of the identifier.
+        std::string mDeclaration;///< Declaration string.
     };
 
     typedef std::string String;
@@ -247,11 +254,11 @@ public:
     typedef uint8_t Char;
 
     struct Glyph {
-        Char mChar;
-        PaletteIndex mColorIndex = PaletteIndex::Default;
-        bool mComment : 1;
-        bool mMultiLineComment : 1;
-        bool mPreprocessor : 1;
+        Char mChar;                      ///< Character code point.
+        PaletteIndex mColorIndex = PaletteIndex::Default; ///< Highlight color index.
+        bool mComment : 1;              ///< True if part of a single-line comment.
+        bool mMultiLineComment : 1;     ///< True if part of a multi-line comment.
+        bool mPreprocessor : 1;         ///< True if part of a preprocessor block.
 
         Glyph(Char aChar, PaletteIndex aColorIndex)
                 : mChar(aChar)
@@ -266,25 +273,27 @@ public:
     typedef std::vector<Glyph> Line;
     typedef std::vector<Line> Lines;
 
+    /// \brief Language syntax configuration used for colorizing and lexing.
     struct LanguageDefinition {
         typedef std::pair<std::string, PaletteIndex> TokenRegexString;
         typedef std::vector<TokenRegexString> TokenRegexStrings;
-        typedef bool (*TokenizeCallback)(const char* in_begin, const char* in_end, const char*& out_begin, const char*& out_end, PaletteIndex& paletteIndex);
+        typedef bool (*TokenizeCallback)(const char* in_begin, const char* in_end, const char*& out_begin, const char*& out_end,
+            PaletteIndex& paletteIndex);
 
-        std::string mName;
-        Keywords mKeywords;
-        Identifiers mIdentifiers;
-        Identifiers mPreprocIdentifiers;
-        std::vector<std::string> single_line_comments;
-        std::vector<std::pair<std::string,std::string>> block_comments;
-        char mPreprocChar;
-        bool mAutoIndentation;
+        std::string mName;                                     ///< Display name.
+        Keywords mKeywords;                                    ///< Set of language keywords.
+        Identifiers mIdentifiers;                              ///< Known identifiers.
+        Identifiers mPreprocIdentifiers;                       ///< Known preprocessor identifiers.
+        std::vector<std::string> single_line_comments;         ///< Single-line comment tokens.
+        std::vector<std::pair<std::string,std::string>> block_comments; ///< Block comment delimiters.
+        char mPreprocChar;                                     ///< Preprocessor token character.
+        bool mAutoIndentation;                                 ///< Enable automatic indentation.
 
-        TokenizeCallback mTokenize;
+        TokenizeCallback mTokenize;                            ///< Optional tokenization callback.
 
-        TokenRegexStrings mTokenRegexStrings;
+        TokenRegexStrings mTokenRegexStrings;                  ///< Regex tokenization rules.
 
-        bool mCaseSensitive;
+        bool mCaseSensitive;                                  ///< Case sensitivity flag.
 
         LanguageDefinition()
                 : mPreprocChar('#')
@@ -311,13 +320,23 @@ public:
         static void m_GLSLDocumentation(Identifiers& idents);
     };
 
+    /// \brief Create a text editor instance.
     TextEditor();
+    /// \brief Destroy the editor instance.
     ~TextEditor();
 
+    /// \brief Set the language definition used for syntax highlighting.
+    /// \param aLanguageDef Language definition to apply.
     void SetLanguageDefinition(const LanguageDefinition& aLanguageDef);
+    /// \brief Get current language definition.
+    /// \return Reference to the active language definition.
     const LanguageDefinition& GetLanguageDefinition() const { return mLanguageDefinition; }
 
+    /// \brief Get the active color palette.
+    /// \return Palette describing colors for each \ref PaletteIndex.
     const Palette& GetPalette() const { return mPaletteBase; }
+    /// \brief Set the color palette used for rendering.
+    /// \param aValue New palette value.
     void SetPalette(const Palette& aValue);
 
     void SetErrorMarkers(const ErrorMarkers& aMarkers) { mErrorMarkers = aMarkers; }
@@ -360,7 +379,9 @@ public:
     bool IsColorizerEnabled() const { return mColorizerEnabled; }
     void SetColorizerEnable(bool aValue);
 
-    Coordinates GetCorrectCursorPosition(); // The GetCursorPosition() returns the cursor pos where \t == 4 spaces
+    /// \brief Get cursor position using configured tab size.
+    /// \note GetCursorPosition() returns position assuming a tab equals four spaces.
+    Coordinates GetCorrectCursorPosition();
     Coordinates GetCursorPosition() const { return GetActualCursorCoordinates(); }
     void SetCursorPosition(const Coordinates& aPosition);
 
@@ -435,6 +456,9 @@ public:
     inline void SetUIFontSize(float size) { mUIFontSize = size; }
     inline void SetEditorFontSize(float size) { mEditorFontSize = size; }
 
+    /// \brief Override a default shortcut.
+    /// \param id Identifier of the shortcut to override.
+    /// \param s  New shortcut definition.
     void SetShortcut(TextEditor::ShortcutID id, Shortcut s);
 
     inline void SetShowLineNumbers(bool s)
@@ -487,15 +511,23 @@ public:
 			mACGlobals = globs;
 	}
 #	endif
+    /// \brief Add a custom autocomplete entry.
+    /// \param search Lookup string used for filtering suggestions.
+    /// \param display Text displayed in the suggestion list.
+    /// \param value  Text inserted when the suggestion is accepted.
     inline void AddAutocompleteEntry(const std::string& search, const std::string& display, const std::string& value)
     {
         mACEntrySearch.push_back(search);
         mACEntries.push_back(std::make_pair(display, value));
     }
-    
+
+    /// \brief Retrieve default keyboard shortcuts.
     static const std::vector<Shortcut> GetDefaultShortcuts();
+    /// \brief Get built-in dark color palette.
     static const Palette& GetDarkPalette();
+    /// \brief Get built-in light color palette.
     static const Palette& GetLightPalette();
+    /// \brief Get built-in retro blue color palette.
     static const Palette& GetRetroBluePalette();
 
     enum class DebugAction
