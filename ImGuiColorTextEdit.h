@@ -19,11 +19,82 @@
 #if IMGUICTE_ENABLE_SPIRV
 #include <SHADERed/Objects/SPIRVParser.h>
 #endif
+namespace ImTextEdit {
 
-/// \brief Interactive text editor with syntax highlighting for ImGui.
-/// \note Right-to-left scripts and complex text shaping are not supported.
-class TextEditor {
-public:
+    struct Coordinates {
+        int mLine;   ///< Zero-based line index.
+        int mColumn; ///< Zero-based column index.
+        Coordinates()
+                : mLine(0)
+                , mColumn(0)
+        {
+        }
+        Coordinates(int aLine, int aColumn)
+                : mLine(aLine)
+                , mColumn(aColumn)
+        {
+            assert(aLine >= 0);
+            assert(aColumn >= 0);
+        }
+        static Coordinates Invalid()
+        {
+            static Coordinates invalid(-1, -1);
+            return invalid;
+        }
+
+        bool operator==(const Coordinates& o) const
+        {
+            return mLine == o.mLine && mColumn == o.mColumn;
+        }
+
+        bool operator!=(const Coordinates& o) const
+        {
+            return mLine != o.mLine || mColumn != o.mColumn;
+        }
+
+        bool operator<(const Coordinates& o) const
+        {
+            if (mLine != o.mLine)
+                return mLine < o.mLine;
+            return mColumn < o.mColumn;
+        }
+
+        bool operator>(const Coordinates& o) const
+        {
+            if (mLine != o.mLine)
+                return mLine > o.mLine;
+            return mColumn > o.mColumn;
+        }
+
+        bool operator<=(const Coordinates& o) const
+        {
+            if (mLine != o.mLine)
+                return mLine < o.mLine;
+            return mColumn <= o.mColumn;
+        }
+
+        bool operator>=(const Coordinates& o) const
+        {
+            if (mLine != o.mLine)
+                return mLine > o.mLine;
+            return mColumn >= o.mColumn;
+        }
+    };
+
+    struct Identifier {
+        Identifier() {}
+        Identifier(const std::string& declr)
+                : mDeclaration(declr)
+        {
+        }
+
+        Coordinates mLocation;   ///< Location of the identifier.
+        std::string mDeclaration;///< Declaration string.
+    };
+
+    typedef std::unordered_map<std::string, Identifier> Identifiers;
+    typedef std::unordered_set<std::string> Keywords;
+
     enum class PaletteIndex {
         Default,
         Keyword,
@@ -122,24 +193,14 @@ public:
         Count
     };
 
-    static const int LineNumberSpace = 20;
-    static const int DebugDataSpace = 10;
-
-    /// \brief Keyboard shortcut description.
     struct Shortcut {
-        bool Alt;   ///< Non-zero if Alt modifier is used.
-        bool Ctrl;  ///< Non-zero if Ctrl modifier is used.
-        bool Shift; ///< Non-zero if Shift modifier is used.
+        bool Alt;
+        bool Ctrl;
+        bool Shift;
 
-        int Key1; ///< First key, Win32 VK code (\-1 if unused).
-        int Key2; ///< Second key, Win32 VK code (\-2 if unused).
+        int Key1;
+        int Key2;
 
-        /// \brief Construct a shortcut definition.
-        /// \param vk1 First key as Win32 VK code or \-1 if unused.
-        /// \param vk2 Second key as Win32 VK code or \-2 if unused.
-        /// \param alt Set to true to require the Alt modifier.
-        /// \param ctrl Set to true to require the Ctrl modifier.
-        /// \param shift Set to true to require the Shift modifier.
         Shortcut(int vk1 = -1, int vk2 = -2, bool alt = false, bool ctrl = false, bool shift = false)
                 : Key1(vk1)
                 , Key2(vk2)
@@ -156,6 +217,55 @@ public:
         Line
     };
 
+    struct LanguageDefinition {
+        typedef std::pair<std::string, PaletteIndex> TokenRegexString;
+        typedef std::vector<TokenRegexString> TokenRegexStrings;
+        typedef bool (*TokenizeCallback)(const char* in_begin, const char* in_end, const char*& out_begin, const char*& out_end,
+            PaletteIndex& paletteIndex);
+
+        std::string mName;
+        Keywords mKeywords;
+        Identifiers mIdentifiers;
+        Identifiers mPreprocIdentifiers;
+        std::vector<std::string> single_line_comments;
+        std::vector<std::pair<std::string,std::string>> block_comments;
+        char mPreprocChar;
+        bool mAutoIndentation;
+
+        TokenizeCallback mTokenize;
+
+        TokenRegexStrings mTokenRegexStrings;
+
+        bool mCaseSensitive;
+
+        LanguageDefinition()
+                : mPreprocChar('#')
+                , mAutoIndentation(true)
+                , mTokenize(nullptr)
+                , mCaseSensitive(true)
+        {
+        }
+    };
+
+    const LanguageDefinition& CPlusPlus();
+    const LanguageDefinition& HLSL();
+    const LanguageDefinition& GLSL();
+    const LanguageDefinition& SPIRV();
+    const LanguageDefinition& C();
+    const LanguageDefinition& SQL();
+    const LanguageDefinition& AngelScript();
+    const LanguageDefinition& Lua();
+    const LanguageDefinition& JSON();
+    const LanguageDefinition& JSONC();
+    const LanguageDefinition& JSONWithHash();
+
+/// \brief Interactive text editor with syntax highlighting for ImGui.
+/// \note Right-to-left scripts and complex text shaping are not supported.
+class TextEditor {
+public:
+    static const int LineNumberSpace = 20;
+    static const int DebugDataSpace = 10;
+
     /// \brief Represents a debugger breakpoint.
     struct Breakpoint {
         int mLine;              ///< Line index where the breakpoint is located.
@@ -170,85 +280,7 @@ public:
         }
     };
 
-    /// \brief Character position within the displayed text.
-    /// \details Uses a zero-based grid on the rendered text; tabs advance to the next tab stop
-    /// depending on \ref mTabSize. For example, coordinate (1,5) refers to the character 'B' in "\tABC"
-    /// when \ref mTabSize equals 4.
-    struct Coordinates {
-        int mLine;   ///< Zero-based line index.
-        int mColumn; ///< Zero-based column index.
-        Coordinates()
-                : mLine(0)
-                , mColumn(0)
-        {
-        }
-        Coordinates(int aLine, int aColumn)
-                : mLine(aLine)
-                , mColumn(aColumn)
-        {
-            assert(aLine >= 0);
-            assert(aColumn >= 0);
-        }
-        static Coordinates Invalid()
-        {
-            static Coordinates invalid(-1, -1);
-            return invalid;
-        }
-
-        bool operator==(const Coordinates& o) const
-        {
-            return mLine == o.mLine && mColumn == o.mColumn;
-        }
-
-        bool operator!=(const Coordinates& o) const
-        {
-            return mLine != o.mLine || mColumn != o.mColumn;
-        }
-
-        bool operator<(const Coordinates& o) const
-        {
-            if (mLine != o.mLine)
-                return mLine < o.mLine;
-            return mColumn < o.mColumn;
-        }
-
-        bool operator>(const Coordinates& o) const
-        {
-            if (mLine != o.mLine)
-                return mLine > o.mLine;
-            return mColumn > o.mColumn;
-        }
-
-        bool operator<=(const Coordinates& o) const
-        {
-            if (mLine != o.mLine)
-                return mLine < o.mLine;
-            return mColumn <= o.mColumn;
-        }
-
-        bool operator>=(const Coordinates& o) const
-        {
-            if (mLine != o.mLine)
-                return mLine > o.mLine;
-            return mColumn >= o.mColumn;
-        }
-    };
-
-    /// \brief Describes an identifier declaration.
-    struct Identifier {
-        Identifier() {}
-        Identifier(const std::string& declr)
-                : mDeclaration(declr)
-        {
-        }
-
-        Coordinates mLocation;   ///< Location of the identifier.
-        std::string mDeclaration;///< Declaration string.
-    };
-
     typedef std::string String;
-    typedef std::unordered_map<std::string, Identifier> Identifiers;
-    typedef std::unordered_set<std::string> Keywords;
     typedef std::map<int, std::string> ErrorMarkers;
     typedef std::array<ImU32, (unsigned)PaletteIndex::Max> Palette;
     typedef uint8_t Char;
@@ -272,53 +304,6 @@ public:
 
     typedef std::vector<Glyph> Line;
     typedef std::vector<Line> Lines;
-
-    /// \brief Language syntax configuration used for colorizing and lexing.
-    struct LanguageDefinition {
-        typedef std::pair<std::string, PaletteIndex> TokenRegexString;
-        typedef std::vector<TokenRegexString> TokenRegexStrings;
-        typedef bool (*TokenizeCallback)(const char* in_begin, const char* in_end, const char*& out_begin, const char*& out_end,
-            PaletteIndex& paletteIndex);
-
-        std::string mName;                                     ///< Display name.
-        Keywords mKeywords;                                    ///< Set of language keywords.
-        Identifiers mIdentifiers;                              ///< Known identifiers.
-        Identifiers mPreprocIdentifiers;                       ///< Known preprocessor identifiers.
-        std::vector<std::string> single_line_comments;         ///< Single-line comment tokens.
-        std::vector<std::pair<std::string,std::string>> block_comments; ///< Block comment delimiters.
-        char mPreprocChar;                                     ///< Preprocessor token character.
-        bool mAutoIndentation;                                 ///< Enable automatic indentation.
-
-        TokenizeCallback mTokenize;                            ///< Optional tokenization callback.
-
-        TokenRegexStrings mTokenRegexStrings;                  ///< Regex tokenization rules.
-
-        bool mCaseSensitive;                                  ///< Case sensitivity flag.
-
-        LanguageDefinition()
-                : mPreprocChar('#')
-                , mAutoIndentation(true)
-                , mTokenize(nullptr)
-                , mCaseSensitive(true)
-        {
-        }
-
-        static const LanguageDefinition& CPlusPlus();
-        static const LanguageDefinition& HLSL();
-        static const LanguageDefinition& GLSL();
-        static const LanguageDefinition& SPIRV();
-        static const LanguageDefinition& C();
-        static const LanguageDefinition& SQL();
-        static const LanguageDefinition& AngelScript();
-        static const LanguageDefinition& Lua();
-        static const LanguageDefinition& JSON();
-        static const LanguageDefinition& JSONC();
-        static const LanguageDefinition& JSONWithHash();
-
-    private:
-        static void m_HLSLDocumentation(Identifiers& idents);
-        static void m_GLSLDocumentation(Identifiers& idents);
-    };
 
     /// \brief Create a text editor instance.
     TextEditor();
@@ -459,7 +444,7 @@ public:
     /// \brief Override a default shortcut.
     /// \param id Identifier of the shortcut to override.
     /// \param s  New shortcut definition.
-    void SetShortcut(TextEditor::ShortcutID id, Shortcut s);
+    void SetShortcut(ShortcutID id, Shortcut s);
 
     inline void SetShowLineNumbers(bool s)
     {
@@ -548,7 +533,7 @@ public:
     std::function<void(TextEditor*, int)> OnBreakpointRemove;
     std::function<void(TextEditor*, int, bool, const std::string&, bool)> OnBreakpointUpdate;
 
-    std::function<void(TextEditor*, const std::string&, TextEditor::Coordinates coords)> OnCtrlAltClick;
+    std::function<void(TextEditor*, const std::string&, Coordinates coords)> OnCtrlAltClick;
     std::function<void(TextEditor*, const std::string&, const std::string&)> RequestOpen;
     std::function<void(TextEditor*)> OnContentUpdate;
 
@@ -575,12 +560,12 @@ private:
 
         UndoRecord(
             const std::string& aAdded,
-            const TextEditor::Coordinates aAddedStart,
-            const TextEditor::Coordinates aAddedEnd,
+            const Coordinates aAddedStart,
+            const Coordinates aAddedEnd,
 
             const std::string& aRemoved,
-            const TextEditor::Coordinates aRemovedStart,
-            const TextEditor::Coordinates aRemovedEnd,
+            const Coordinates aRemovedStart,
+            const Coordinates aRemovedEnd,
 
             TextEditor::EditorState& aBefore,
             TextEditor::EditorState& aAfter);
@@ -615,7 +600,7 @@ private:
     void AddUndo(UndoRecord& aValue);
     Coordinates ScreenPosToCoordinates(const ImVec2& aPosition) const;
     Coordinates MousePosToCoordinates(const ImVec2& aPosition) const;
-    ImVec2 CoordinatesToScreenPos(const TextEditor::Coordinates& aPosition) const;
+    ImVec2 CoordinatesToScreenPos(const Coordinates& aPosition) const;
     Coordinates FindWordStart(const Coordinates& aFrom) const;
     Coordinates FindWordEnd(const Coordinates& aFrom) const;
     Coordinates FindNextWord(const Coordinates& aFrom) const;
@@ -653,10 +638,10 @@ private:
     }
 
     bool mFunctionDeclarationTooltipEnabled;
-    TextEditor::Coordinates mFunctionDeclarationCoord;
+    Coordinates mFunctionDeclarationCoord;
     bool mFunctionDeclarationTooltip;
     std::string mFunctionDeclaration;
-    void mOpenFunctionDeclarationTooltip(const std::string& obj, TextEditor::Coordinates coord);
+    void mOpenFunctionDeclarationTooltip(const std::string& obj, Coordinates coord);
 
 	std::string mBuildFunctionDef(const std::string& func, const std::string& lang);
 #	if IMGUICTE_ENABLE_SPIRV
@@ -786,3 +771,5 @@ private:
 
     float mLastClick;
 };
+
+} // namespace ImTextEdit
