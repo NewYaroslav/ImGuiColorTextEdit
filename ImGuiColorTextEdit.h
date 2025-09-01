@@ -347,108 +347,318 @@ public:
 
     inline bool IsDebugging() { return mDebugCurrentLine > 0; }
 
+    /// \brief Render the editor inside an ImGui window.
+    /// \param aTitle Window title string.
+    /// \param aSize Desired size in pixels.
+    /// \param aBorder Set to true to draw a border.
+    /// \code
+    /// ImTextEdit::TextEditor editor;
+    /// editor.SetText("int main() { return 0; }");
+    /// editor.Render("Code");
+    /// \endcode
     void Render(const char* aTitle, const ImVec2& aSize = ImVec2(), bool aBorder = false);
+
+    /// \brief Replace the entire editor contents.
+    /// \param aText New text to display.
     void SetText(const std::string& aText);
+
+    /// \brief Retrieve all text from the editor.
+    /// \return Complete text buffer.
     std::string GetText() const;
 
+    /// \brief Set editor text from individual lines.
+    /// \param aLines Vector where each element represents one line.
     void SetTextLines(const std::vector<std::string>& aLines);
+
+    /// \brief Copy editor text into a vector of lines.
+    /// \param out Destination vector receiving one string per line.
     void GetTextLines(std::vector<std::string>& out) const;
 
+    /// \brief Get currently selected text.
+    /// \return Selected substring or empty string if nothing is selected.
     std::string GetSelectedText() const;
+
+    /// \brief Get text from the line containing the cursor.
+    /// \return Line contents without trailing newline.
     std::string GetCurrentLineText() const;
 
+    /// \brief Get total number of lines in the document.
+    /// \return Line count.
     int GetTotalLines() const { return (int)mLines.size(); }
+
+    /// \brief Determine if overwrite mode is active.
+    /// \return True when characters replace existing ones.
     bool IsOverwrite() const { return mOverwrite; }
 
+    /// \brief Check whether the editor window has input focus.
+    /// \return True if focused.
     bool IsFocused() const { return mFocused; }
+
+    /// \brief Enable or disable read-only mode.
+    /// \param aValue True to disallow modifications.
     void SetReadOnly(bool aValue);
+
+    /// \brief Determine if the editor is currently read-only.
+    /// \return True if modifications are not permitted.
     bool IsReadOnly() { return mReadOnly || IsDebugging(); }
+
+    /// \brief Check whether the text has changed since the last reset.
+    /// \return True if content was modified.
     bool IsTextChanged() const { return mTextChanged; }
+
+    /// \brief Check whether the cursor position has changed.
+    /// \return True if the cursor moved.
     bool IsCursorPositionChanged() const { return mCursorPositionChanged; }
+
+    /// \brief Clear the text-changed flag and tracked lines.
     inline void ResetTextChanged()
     {
         mTextChanged = false;
         mChangedLines.clear();
     }
 
+    /// \brief Determine if syntax colorization is enabled.
+    /// \return True when colorizer is active.
     bool IsColorizerEnabled() const { return mColorizerEnabled; }
+
+    /// \brief Enable or disable syntax colorization.
+    /// \param aValue True to enable the colorizer.
     void SetColorizerEnable(bool aValue);
 
     /// \brief Get cursor position using configured tab size.
     /// \note GetCursorPosition() returns position assuming a tab equals four spaces.
     Coordinates GetCorrectCursorPosition();
     Coordinates GetCursorPosition() const { return GetActualCursorCoordinates(); }
+    /// \brief Move the cursor to a specific coordinate.
+    /// \param aPosition Zero-based line and column.
     void SetCursorPosition(const Coordinates& aPosition);
 
+    /// \brief Enable or disable mouse input handling.
+    /// \param aValue True to allow mouse interactions.
     inline void SetHandleMouseInputs(bool aValue) { mHandleMouseInputs = aValue; }
+
+    /// \brief Check if mouse inputs are being handled.
+    /// \return True when mouse input is enabled.
     inline bool IsHandleMouseInputsEnabled() const { return mHandleKeyboardInputs; }
 
+    /// \brief Enable or disable keyboard input handling.
+    /// \param aValue True to allow keyboard interactions.
     inline void SetHandleKeyboardInputs(bool aValue) { mHandleKeyboardInputs = aValue; }
+
+    /// \brief Check if keyboard inputs are being handled.
+    /// \return True when keyboard input is enabled.
     inline bool IsHandleKeyboardInputsEnabled() const { return mHandleKeyboardInputs; }
 
+    /// \brief Ignore the parent ImGui child region.
+    /// \param aValue True to ignore child status.
     inline void SetImGuiChildIgnored(bool aValue) { mIgnoreImGuiChild = aValue; }
+
+    /// \brief Check whether child region status is ignored.
+    /// \return True when child is ignored.
     inline bool IsImGuiChildIgnored() const { return mIgnoreImGuiChild; }
 
+    /// \brief Toggle visualization of whitespace characters.
+    /// \param aValue True to display spaces and tabs.
     inline void SetShowWhitespaces(bool aValue) { mShowWhitespaces = aValue; }
+
+    /// \brief Determine if whitespace visualization is enabled.
+    /// \return True when spaces and tabs are shown.
     inline bool IsShowingWhitespaces() const { return mShowWhitespaces; }
 
+    /// \brief Insert text at the cursor position.
+    /// \param aValue String to insert.
+    /// \param indent True to auto-indent inserted text.
     void InsertText(const std::string& aValue, bool indent = false);
+
+    /// \brief Insert text at the cursor position.
+    /// \param aValue Null-terminated string to insert.
+    /// \param indent True to auto-indent inserted text.
     void InsertText(const char* aValue, bool indent = false);
 
+    /// \brief Move the cursor up by a number of lines.
+    /// \param aAmount Number of lines to move.
+    /// \param aSelect True to extend the selection.
     void MoveUp(int aAmount = 1, bool aSelect = false);
+
+    /// \brief Move the cursor down by a number of lines.
+    /// \param aAmount Number of lines to move.
+    /// \param aSelect True to extend the selection.
     void MoveDown(int aAmount = 1, bool aSelect = false);
+
+    /// \brief Move the cursor left.
+    /// \param aAmount Number of columns to move.
+    /// \param aSelect True to extend the selection.
+    /// \param aWordMode When true, move by words instead of characters.
     void MoveLeft(int aAmount = 1, bool aSelect = false, bool aWordMode = false);
+
+    /// \brief Move the cursor right.
+    /// \param aAmount Number of columns to move.
+    /// \param aSelect True to extend the selection.
+    /// \param aWordMode When true, move by words instead of characters.
     void MoveRight(int aAmount = 1, bool aSelect = false, bool aWordMode = false);
+
+    /// \brief Move the cursor to the first line.
+    /// \param aSelect True to extend the selection.
     void MoveTop(bool aSelect = false);
+
+    /// \brief Move the cursor to the last line.
+    /// \param aSelect True to extend the selection.
     void MoveBottom(bool aSelect = false);
+
+    /// \brief Move the cursor to the beginning of the current line.
+    /// \param aSelect True to extend the selection.
     void MoveHome(bool aSelect = false);
+
+    /// \brief Move the cursor to the end of the current line.
+    /// \param aSelect True to extend the selection.
     void MoveEnd(bool aSelect = false);
 
+    /// \brief Set the beginning of the selection.
+    /// \param aPosition Start coordinate.
     void SetSelectionStart(const Coordinates& aPosition);
+
+    /// \brief Set the end of the selection.
+    /// \param aPosition End coordinate.
     void SetSelectionEnd(const Coordinates& aPosition);
+
+    /// \brief Define a selection range.
+    /// \param aStart Start coordinate.
+    /// \param aEnd End coordinate.
+    /// \param aMode Selection behavior.
     void SetSelection(const Coordinates& aStart, const Coordinates& aEnd, SelectionMode aMode = SelectionMode::Normal);
+
+    /// \brief Select the word under the cursor.
     void SelectWordUnderCursor();
+
+    /// \brief Select the entire document.
     void SelectAll();
+
+    /// \brief Determine whether text is currently selected.
+    /// \return True when a selection exists.
     bool HasSelection() const;
 
+    /// \brief Copy current selection to the clipboard.
     void Copy();
+
+    /// \brief Cut current selection to the clipboard.
     void Cut();
+
+    /// \brief Paste clipboard contents at the cursor position.
     void Paste();
+
+    /// \brief Delete the current selection.
     void Delete();
 
+    /// \brief Check whether an undo operation is available.
+    /// \return True if there are actions to undo.
     bool CanUndo();
+
+    /// \brief Check whether a redo operation is available.
+    /// \return True if there are actions to redo.
     bool CanRedo();
+
+    /// \brief Undo a number of actions.
+    /// \param aSteps Number of steps to undo.
     void Undo(int aSteps = 1);
+
+    /// \brief Redo a number of actions.
+    /// \param aSteps Number of steps to redo.
     void Redo(int aSteps = 1);
 
+    /// \brief Get expressions relevant for debugging on a given line.
+    /// \param line Line index to inspect.
+    /// \return List of expressions.
     std::vector<std::string> GetRelevantExpressions(int line);
 
+    /// \brief Highlight specific lines.
+    /// \param lines Indices of lines to highlight.
     inline void SetHighlightedLines(const std::vector<int>& lines) { mHighlightedLines = lines; }
+
+    /// \brief Clear all highlighted lines.
     inline void ClearHighlightedLines() { mHighlightedLines.clear(); }
 
+    /// \brief Set the width of a tab character.
+    /// \param s Number of spaces per tab (0-32).
     inline void SetTabSize(int s) { mTabSize = std::max<int>(0, std::min<int>(32, s)); }
+
+    /// \brief Get the width of a tab character.
+    /// \return Number of spaces per tab.
     inline int GetTabSize() { return mTabSize; }
 
+    /// \brief Toggle insertion of spaces instead of tab characters.
+    /// \param s True to insert spaces.
     inline void SetInsertSpaces(bool s) { mInsertSpaces = s; }
+
+    /// \brief Check whether spaces are inserted instead of tabs.
+    /// \return True when spaces are used.
     inline int GetInsertSpaces() { return mInsertSpaces; }
 
+    /// \brief Enable smart indentation.
+    /// \param s True to enable.
     inline void SetSmartIndent(bool s) { mSmartIndent = s; }
+
+    /// \brief Automatically indent pasted text.
+    /// \param s True to enable.
     inline void SetAutoIndentOnPaste(bool s) { mAutoindentOnPaste = s; }
+
+    /// \brief Highlight the current line.
+    /// \param s True to enable line highlighting.
     inline void SetHighlightLine(bool s) { mHighlightLine = s; }
+
+    /// \brief Automatically insert matching braces.
+    /// \param s True to enable brace completion.
     inline void SetCompleteBraces(bool s) { mCompleteBraces = s; }
+
+    /// \brief Enable horizontal scrolling.
+    /// \param s True to allow horizontal scrolling.
     inline void SetHorizontalScroll(bool s) { mHorizontalScroll = s; }
+
+    /// \brief Enable predictive autocomplete.
+    /// \param s True to enable suggestions.
     inline void SetSmartPredictions(bool s) { mAutocomplete = s; }
+
+    /// \brief Show function declaration tooltip on hover.
+    /// \param s True to enable.
     inline void SetFunctionDeclarationTooltip(bool s) { mFunctionDeclarationTooltipEnabled = s; }
+
+    /// \brief Show user function tooltips on hover.
+    /// \param s True to enable.
     inline void SetFunctionTooltips(bool s) { mFuncTooltips = s; }
+
+    /// \brief Manually activate or deactivate autocomplete popup.
+    /// \param cac True to activate.
     inline void SetActiveAutocomplete(bool cac) { mActiveAutocomplete = cac; }
+
+    /// \brief Display markers on the scrollbar.
+    /// \param markers True to enable markers.
     inline void SetScrollbarMarkers(bool markers) { mScrollbarMarkers = markers; }
+
+    /// \brief Show or hide the sidebar.
+    /// \param s True to show the sidebar.
     inline void SetSidebarVisible(bool s) { mSidebar = s; }
+
+    /// \brief Enable or disable search UI.
+    /// \param s True to allow searching.
     inline void SetSearchEnabled(bool s) { mHasSearch = s; }
+
+    /// \brief Highlight matching brackets.
+    /// \param s True to enable bracket highlighting.
     inline void SetHiglightBrackets(bool s) { mHighlightBrackets = s; }
+
+    /// \brief Enable or disable code folding.
+    /// \param s True to enable folding.
     inline void SetFoldEnabled(bool s) { mFoldEnabled = s; }
 
+    /// \brief Set UI scale factor.
+    /// \param scale Scale multiplier.
     inline void SetUIScale(float scale) { mUIScale = scale; }
+
+    /// \brief Set UI font size in pixels.
+    /// \param size Font size in pixels.
     inline void SetUIFontSize(float size) { mUIFontSize = size; }
+
+    /// \brief Set editor font size in pixels.
+    /// \param size Font size in pixels.
     inline void SetEditorFontSize(float size) { mEditorFontSize = size; }
 
     /// \brief Override a default shortcut.
@@ -456,16 +666,30 @@ public:
     /// \param s  New shortcut definition.
     void SetShortcut(ShortcutID id, Shortcut s);
 
+    /// \brief Toggle display of line numbers in the sidebar.
+    /// \param s True to show line numbers.
     inline void SetShowLineNumbers(bool s)
     {
         mShowLineNumbers = s;
         mTextStart = (s ? 20 : 6);
         mLeftMargin = (s ? (DebugDataSpace + LineNumberSpace) : (DebugDataSpace - LineNumberSpace));
     }
+
+    /// \brief Get horizontal offset where text rendering starts.
+    /// \return Offset in pixels from the left edge.
     inline int GetTextStart() const { return mShowLineNumbers ? 7 : 3; }
 
+    /// \brief Recompute syntax highlighting for a set of lines.
+    /// \param aFromLine Starting line index.
+    /// \param aCount Number of lines to colorize, -1 for all remaining lines.
     void Colorize(int aFromLine = 0, int aCount = -1);
+
+    /// \brief Recompute syntax highlighting for an explicit range.
+    /// \param aFromLine First line index.
+    /// \param aToLine Last line index.
     void ColorizeRange(int aFromLine = 0, int aToLine = 0);
+
+    /// \brief Recompute syntax highlighting for the entire document.
     void ColorizeInternal();
 
 #	if IMGUICTE_ENABLE_SPIRV
