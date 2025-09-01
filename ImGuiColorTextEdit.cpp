@@ -5151,7 +5151,7 @@ std::vector<std::string> TextEditor::GetRelevantExpressions(int line)
 
 const TextEditor::Palette & GetDarkPalette()
 {
-    const static Palette p = { {
+    const static TextEditor::Palette p = { {
         0xff7f7f7f, // Default
         0xffd69c56, // Keyword  
         0xff00ff00, // Number
@@ -5190,7 +5190,7 @@ const TextEditor::Palette & GetDarkPalette()
 
 const TextEditor::Palette & GetLightPalette()
 {
-    const static Palette p = { {
+    const static TextEditor::Palette p = { {
         0xff7f7f7f, // None
         0xffff0c06, // Keyword  
         0xff008000, // Number
@@ -5229,7 +5229,7 @@ const TextEditor::Palette & GetLightPalette()
 
 const TextEditor::Palette & GetRetroBluePalette()
 {
-    const static Palette p = { {
+    const static TextEditor::Palette p = { {
         0xff00ffff, // None
         0xffffff00, // Keyword  
         0xff00ff00, // Number
@@ -6055,58 +6055,7 @@ const LanguageDefinition& CPlusPlus()
     return langDef;
 }
 
-const LanguageDefinition& HLSL()
-{
-    static bool inited = false;
-    static LanguageDefinition langDef;
-    if (!inited)
-    {
-        static const char* const keywords[] = {
-            "AppendStructuredBuffer", "asm", "asm_fragment", "BlendState", "bool", "break", "Buffer", "ByteAddressBuffer", "case", "cbuffer", "centroid", "class", "column_major", "compile", "compile_fragment",
-            "CompileShader", "const", "continue", "ComputeShader", "ConsumeStructuredBuffer", "default", "DepthStencilState", "DepthStencilView", "discard", "do", "double", "DomainShader", "dword", "else",
-            "export", "extern", "false", "float", "for", "fxgroup", "GeometryShader", "groupshared", "half", "Hullshader", "if", "in", "inline", "inout", "InputPatch", "int", "interface", "line", "lineadj",
-            "linear", "LineStream", "matrix", "min16float", "min10float", "min16int", "min12int", "min16uint", "namespace", "nointerpolation", "noperspective", "NULL", "out", "OutputPatch", "packoffset",
-            "pass", "pixelfragment", "PixelShader", "point", "PointStream", "precise", "RasterizerState", "RenderTargetView", "return", "register", "row_major", "RWBuffer", "RWByteAddressBuffer", "RWStructuredBuffer",
-            "RWTexture1D", "RWTexture1DArray", "RWTexture2D", "RWTexture2DArray", "RWTexture3D", "sample", "sampler", "SamplerState", "SamplerComparisonState", "shared", "snorm", "stateblock", "stateblock_state",
-            "static", "string", "struct", "switch", "StructuredBuffer", "tbuffer", "technique", "technique10", "technique11", "texture", "Texture1D", "Texture1DArray", "Texture2D", "Texture2DArray", "Texture2DMS",
-            "Texture2DMSArray", "Texture3D", "TextureCube", "TextureCubeArray", "true", "typedef", "triangle", "triangleadj", "TriangleStream", "uint", "uniform", "unorm", "unsigned", "vector", "vertexfragment",
-            "VertexShader", "void", "volatile", "while",
-            "bool1","bool2","bool3","bool4","double1","double2","double3","double4", "float1", "float2", "float3", "float4", "int1", "int2", "int3", "int4", "in", "out", "inout",
-            "uint1", "uint2", "uint3", "uint4", "dword1", "dword2", "dword3", "dword4", "half1", "half2", "half3", "half4",
-            "float1x1","float2x1","float3x1","float4x1","float1x2","float2x2","float3x2","float4x2",
-            "float1x3","float2x3","float3x3","float4x3","float1x4","float2x4","float3x4","float4x4",
-            "half1x1","half2x1","half3x1","half4x1","half1x2","half2x2","half3x2","half4x2",
-            "half1x3","half2x3","half3x3","half4x3","half1x4","half2x4","half3x4","half4x4",
-            "SHADERED_WEB", "SHADERED_DESKTOP", "SHADERED_VERSION"
-        };
-        for (auto& k : keywords)
-            langDef.mKeywords.insert(k);
-
-        m_HLSLDocumentation(langDef.mIdentifiers);
-
-        langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[ \\t]*#[ \\t]*[a-zA-Z_]+", PaletteIndex::Preprocessor));
-        langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("L?\\\"(\\\\.|[^\\\"])*\\\"", PaletteIndex::String));
-        langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("\\'\\\\?[^\\']\\'", PaletteIndex::CharLiteral));
-        langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?", PaletteIndex::Number));
-        langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[+-]?[0-9]+[Uu]?[lL]?[lL]?", PaletteIndex::Number));
-        langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("0[0-7]+[Uu]?[lL]?[lL]?", PaletteIndex::Number));
-        langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", PaletteIndex::Number));
-        langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[a-zA-Z_][a-zA-Z0-9_]*", PaletteIndex::Identifier));
-        langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", PaletteIndex::Punctuation));
-
-        langDef.block_comments.push_back(std::make_pair("/*","*/"));
-        langDef.single_line_comments.push_back("//");
-
-        langDef.mCaseSensitive = true;
-        langDef.mAutoIndentation = true;
-
-        langDef.mName = "HLSL";
-
-        inited = true;
-    }
-    return langDef;
-}
-static void m_HLSLDocumentation(Identifiers& idents)
+static void HLSLDocumentation_impl(Identifiers& idents)
 {
     /* SOURCE: https://docs.microsoft.com/en-us/windows/desktop/direct3dhlsl/dx-graphics-hlsl-intrinsic-functions */
 
@@ -6247,28 +6196,34 @@ static void m_HLSLDocumentation(Identifiers& idents)
     idents.insert(std::make_pair("trunc", Identifier("Truncates floating-point value(s) to integer value(s)")));
 }
 
-const LanguageDefinition& GLSL()
+const LanguageDefinition& HLSL()
 {
     static bool inited = false;
     static LanguageDefinition langDef;
     if (!inited)
     {
         static const char* const keywords[] = {
-            "auto", "break", "case", "char", "const", "continue", "default", "do", "double", "else", "enum", "extern", "float", "for", "goto", "if", "inline", "int", "long", "register", "restrict", "return", "short",
-            "signed", "sizeof", "static", "struct", "switch", "typedef", "union", "unsigned", "void", "volatile", "while", "_Alignas", "_Alignof", "_Atomic", "_Bool", "_Complex", "_Generic", "_Imaginary",
-            "_Noreturn", "_Static_assert", "_Thread_local", "attribute", "uniform", "varying", "layout", "centroid", "flat", "smooth", "noperspective", "patch", "sample", "subroutine", "in", "out", "inout",
-            "bool", "true", "false", "invariant", "mat2", "mat3", "mat4", "dmat2", "dmat3", "dmat4", "mat2x2", "mat2x3", "mat2x4", "dmat2x2", "dmat2x3", "dmat2x4", "mat3x2", "mat3x3", "mat3x4", "dmat3x2", "dmat3x3", "dmat3x4",
-            "mat4x2", "mat4x3", "mat4x4", "dmat4x2", "dmat4x3", "dmat4x4", "vec2", "vec3", "vec4", "ivec2", "ivec3", "ivec4", "bvec2", "bvec3", "bvec4", "dvec2", "dvec3", "dvec4", "uint", "uvec2", "uvec3", "uvec4",
-            "lowp", "mediump", "highp", "precision", "sampler1D", "sampler2D", "sampler3D", "samplerCube", "sampler1DShadow", "sampler2DShadow", "samplerCubeShadow", "sampler1DArray", "sampler2DArray", "sampler1DArrayShadow",
-            "sampler2DArrayShadow", "isampler1D", "isampler2D", "isampler3D", "isamplerCube", "isampler1DArray", "isampler2DArray", "usampler1D", "usampler2D", "usampler3D", "usamplerCube", "usampler1DArray", "usampler2DArray",
-            "sampler2DRect", "sampler2DRectShadow", "isampler2DRect", "usampler2DRect", "samplerBuffer", "isamplerBuffer", "usamplerBuffer", "sampler2DMS", "isampler2DMS", "usampler2DMS", "sampler2DMSArray", "isampler2DMSArray",
-            "usampler2DMSArray", "samplerCubeArray", "samplerCubeArrayShadow", "isamplerCubeArray", "usamplerCubeArray",
-            "SHADERED_WEB", "SHADERED_DESKTOP", "SHADERED_VERSION", "shared", "writeonly", "readonly", "image2D", "image1D", "image3D"
+            "AppendStructuredBuffer", "asm", "asm_fragment", "BlendState", "bool", "break", "Buffer", "ByteAddressBuffer", "case", "cbuffer", "centroid", "class", "column_major", "compile", "compile_fragment",
+            "CompileShader", "const", "continue", "ComputeShader", "ConsumeStructuredBuffer", "default", "DepthStencilState", "DepthStencilView", "discard", "do", "double", "DomainShader", "dword", "else",
+            "export", "extern", "false", "float", "for", "fxgroup", "GeometryShader", "groupshared", "half", "Hullshader", "if", "in", "inline", "inout", "InputPatch", "int", "interface", "line", "lineadj",
+            "linear", "LineStream", "matrix", "min16float", "min10float", "min16int", "min12int", "min16uint", "namespace", "nointerpolation", "noperspective", "NULL", "out", "OutputPatch", "packoffset",
+            "pass", "pixelfragment", "PixelShader", "point", "PointStream", "precise", "RasterizerState", "RenderTargetView", "return", "register", "row_major", "RWBuffer", "RWByteAddressBuffer", "RWStructuredBuffer",
+            "RWTexture1D", "RWTexture1DArray", "RWTexture2D", "RWTexture2DArray", "RWTexture3D", "sample", "sampler", "SamplerState", "SamplerComparisonState", "shared", "snorm", "stateblock", "stateblock_state",
+            "static", "string", "struct", "switch", "StructuredBuffer", "tbuffer", "technique", "technique10", "technique11", "texture", "Texture1D", "Texture1DArray", "Texture2D", "Texture2DArray", "Texture2DMS",
+            "Texture2DMSArray", "Texture3D", "TextureCube", "TextureCubeArray", "true", "typedef", "triangle", "triangleadj", "TriangleStream", "uint", "uniform", "unorm", "unsigned", "vector", "vertexfragment",
+            "VertexShader", "void", "volatile", "while",
+            "bool1","bool2","bool3","bool4","double1","double2","double3","double4", "float1", "float2", "float3", "float4", "int1", "int2", "int3", "int4", "in", "out", "inout",
+            "uint1", "uint2", "uint3", "uint4", "dword1", "dword2", "dword3", "dword4", "half1", "half2", "half3", "half4",
+            "float1x1","float2x1","float3x1","float4x1","float1x2","float2x2","float3x2","float4x2",
+            "float1x3","float2x3","float3x3","float4x3","float1x4","float2x4","float3x4","float4x4",
+            "half1x1","half2x1","half3x1","half4x1","half1x2","half2x2","half3x2","half4x2",
+            "half1x3","half2x3","half3x3","half4x3","half1x4","half2x4","half3x4","half4x4",
+            "SHADERED_WEB", "SHADERED_DESKTOP", "SHADERED_VERSION"
         };
         for (auto& k : keywords)
             langDef.mKeywords.insert(k);
 
-        m_GLSLDocumentation(langDef.mIdentifiers);
+        HLSLDocumentation_impl(langDef.mIdentifiers);
 
         langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[ \\t]*#[ \\t]*[a-zA-Z_]+", PaletteIndex::Preprocessor));
         langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("L?\\\"(\\\\.|[^\\\"])*\\\"", PaletteIndex::String));
@@ -6286,13 +6241,14 @@ const LanguageDefinition& GLSL()
         langDef.mCaseSensitive = true;
         langDef.mAutoIndentation = true;
 
-        langDef.mName = "GLSL";
+        langDef.mName = "HLSL";
 
         inited = true;
     }
     return langDef;
 }
-static void m_GLSLDocumentation(Identifiers& idents)
+
+static void GLSLDocumentation_impl(Identifiers& idents)
 {
     /* SOURCE: https://docs.microsoft.com/en-us/windows/desktop/direct3dhlsl/dx-graphics-hlsl-intrinsic-functions */
 
@@ -6456,6 +6412,52 @@ static void m_GLSLDocumentation(Identifiers& idents)
     idents.insert(std::make_pair("atomicMin", Identifier("int atomicMin(inout int mem, int data)\nuint atomicMin(inout uint mem, uint data)\nPerform an atomic min operation to a variable ")));
     idents.insert(std::make_pair("atomicOr", Identifier("int atomicOr(inout int mem, int data)\nuint atomicOr(inout uint mem, uint data)\nPerform an atomic logical OR operation to a variable")));
     idents.insert(std::make_pair("atomicXor", Identifier("int atomicXor(inout int mem, int data)\nuint atomicXor(inout uint mem, uint data)\nPerform an atomic logical exclusive OR operation to a variable")));
+}
+
+const LanguageDefinition& GLSL()
+{
+    static bool inited = false;
+    static LanguageDefinition langDef;
+    if (!inited)
+    {
+        static const char* const keywords[] = {
+            "auto", "break", "case", "char", "const", "continue", "default", "do", "double", "else", "enum", "extern", "float", "for", "goto", "if", "inline", "int", "long", "register", "restrict", "return", "short",
+            "signed", "sizeof", "static", "struct", "switch", "typedef", "union", "unsigned", "void", "volatile", "while", "_Alignas", "_Alignof", "_Atomic", "_Bool", "_Complex", "_Generic", "_Imaginary",
+            "_Noreturn", "_Static_assert", "_Thread_local", "attribute", "uniform", "varying", "layout", "centroid", "flat", "smooth", "noperspective", "patch", "sample", "subroutine", "in", "out", "inout",
+            "bool", "true", "false", "invariant", "mat2", "mat3", "mat4", "dmat2", "dmat3", "dmat4", "mat2x2", "mat2x3", "mat2x4", "dmat2x2", "dmat2x3", "dmat2x4", "mat3x2", "mat3x3", "mat3x4", "dmat3x2", "dmat3x3", "dmat3x4",
+            "mat4x2", "mat4x3", "mat4x4", "dmat4x2", "dmat4x3", "dmat4x4", "vec2", "vec3", "vec4", "ivec2", "ivec3", "ivec4", "bvec2", "bvec3", "bvec4", "dvec2", "dvec3", "dvec4", "uint", "uvec2", "uvec3", "uvec4",
+            "lowp", "mediump", "highp", "precision", "sampler1D", "sampler2D", "sampler3D", "samplerCube", "sampler1DShadow", "sampler2DShadow", "samplerCubeShadow", "sampler1DArray", "sampler2DArray", "sampler1DArrayShadow",
+            "sampler2DArrayShadow", "isampler1D", "isampler2D", "isampler3D", "isamplerCube", "isampler1DArray", "isampler2DArray", "usampler1D", "usampler2D", "usampler3D", "usamplerCube", "usampler1DArray", "usampler2DArray",
+            "sampler2DRect", "sampler2DRectShadow", "isampler2DRect", "usampler2DRect", "samplerBuffer", "isamplerBuffer", "usamplerBuffer", "sampler2DMS", "isampler2DMS", "usampler2DMS", "sampler2DMSArray", "isampler2DMSArray",
+            "usampler2DMSArray", "samplerCubeArray", "samplerCubeArrayShadow", "isamplerCubeArray", "usamplerCubeArray",
+            "SHADERED_WEB", "SHADERED_DESKTOP", "SHADERED_VERSION", "shared", "writeonly", "readonly", "image2D", "image1D", "image3D"
+        };
+        for (auto& k : keywords)
+            langDef.mKeywords.insert(k);
+
+        GLSLDocumentation_impl(langDef.mIdentifiers);
+
+        langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[ \\t]*#[ \\t]*[a-zA-Z_]+", PaletteIndex::Preprocessor));
+        langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("L?\\\"(\\\\.|[^\\\"])*\\\"", PaletteIndex::String));
+        langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("\\'\\\\?[^\\']\\'", PaletteIndex::CharLiteral));
+        langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?", PaletteIndex::Number));
+        langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[+-]?[0-9]+[Uu]?[lL]?[lL]?", PaletteIndex::Number));
+        langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("0[0-7]+[Uu]?[lL]?[lL]?", PaletteIndex::Number));
+        langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", PaletteIndex::Number));
+        langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[a-zA-Z_][a-zA-Z0-9_]*", PaletteIndex::Identifier));
+        langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", PaletteIndex::Punctuation));
+
+        langDef.block_comments.push_back(std::make_pair("/*","*/"));
+        langDef.single_line_comments.push_back("//");
+
+        langDef.mCaseSensitive = true;
+        langDef.mAutoIndentation = true;
+
+        langDef.mName = "GLSL";
+
+        inited = true;
+    }
+    return langDef;
 }
 
 const LanguageDefinition& SPIRV()
@@ -6733,89 +6735,101 @@ const LanguageDefinition& Lua()
     return langDef;
 }
 
-const LanguageDefinition& JSON()
-{
+// JSON, JSONC, JSONWithHash language definitions for ImGuiColorTextEdit
+// Notes:
+//  - Regex flavor: std::regex ECMAScript (non-capturing groups (?: ) are NOT used).
+//  - String: allows generic escapes via \\.
+//  - Number: strict JSON number grammar (no leading '+', no leading '.', no invalid leading zeros).
+//  - Punctuation: minimal class for JSON delimiters.
+
+const LanguageDefinition& JSON() {
     static bool inited = false;
     static LanguageDefinition langDef;
-    if (!inited)
-    {
-        static const char* const keywords[] = {
-            "true", "false", "null"
-        };
+    if (!inited) {
+        // Keywords: JSON literals
+        static const char* const keywords[] = { "true", "false", "null" };
         for (auto& k : keywords)
             langDef.mKeywords.insert(k);
 
-        langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("L?\\\"(\\\\.|[^\\\"])*\\\"", PaletteIndex::String));
-        langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?", PaletteIndex::Number));
-        langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[a-zA-Z_][a-zA-Z0-9_]*", PaletteIndex::Identifier));
-        langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[\\[\\]\\{\\}\\:\,]", PaletteIndex::Punctuation));
+        // "([^"\\]|\\.)*"
+        langDef.mTokenRegexStrings.emplace_back(
+            R"("([^"\\]|\\.)*")", PaletteIndex::String);
 
-        langDef.mCaseSensitive = true;
-        langDef.mAutoIndentation = true;
+        // -?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?
+        langDef.mTokenRegexStrings.emplace_back(
+            R"(-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?)", PaletteIndex::Number);
 
-        langDef.mName = "JSON";
+        // Identifiers (used so that true/false/null can be recognized as keywords)
+        langDef.mTokenRegexStrings.emplace_back(
+            R"([A-Za-z_][A-Za-z0-9_]*)", PaletteIndex::Identifier);
 
-        inited = true;
-    }
-    return langDef;
-}
-const LanguageDefinition& JSONC()
-{
-    static bool inited = false;
-    static LanguageDefinition langDef;
-    if (!inited)
-    {
-        static const char* const keywords[] = {
-            "true", "false", "null"
-        };
-        for (auto& k : keywords)
-            langDef.mKeywords.insert(k);
+        // [ ] { } : ,
+        langDef.mTokenRegexStrings.emplace_back(
+            R"([\[\]{}:,])", PaletteIndex::Punctuation);
 
-        langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("L?\\\"(\\\\.|[^\\\"])*\\\"", PaletteIndex::String));
-        langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?", PaletteIndex::Number));
-        langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[a-zA-Z_][a-zA-Z0-9_]*", PaletteIndex::Identifier));
-        langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[\\[\\]\\{\\}\\:\,]", PaletteIndex::Punctuation));
-
-        langDef.block_comments.push_back(std::make_pair("/*","*/"));
-        langDef.single_line_comments.push_back("//");
-
-        langDef.mCaseSensitive = true;
-        langDef.mAutoIndentation = true;
-
-        langDef.mName = "JSONC";
-
+        langDef.mCaseSensitive     = true;
+        langDef.mAutoIndentation   = true;
+        langDef.mName              = "JSON";
         inited = true;
     }
     return langDef;
 }
 
-const LanguageDefinition& JSONWithHash()
-{
+const LanguageDefinition& JSONC() {
     static bool inited = false;
     static LanguageDefinition langDef;
-    if (!inited)
-    {
-        static const char* const keywords[] = {
-            "true", "false", "null"
-        };
+    if (!inited) {
+        static const char* const keywords[] = { "true", "false", "null" };
         for (auto& k : keywords)
             langDef.mKeywords.insert(k);
 
-        langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("L?\\\"(\\\\.|[^\\\"])*\\\"", PaletteIndex::String));
-        langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?", PaletteIndex::Number));
-        langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[a-zA-Z_][a-zA-Z0-9_]*", PaletteIndex::Identifier));
-        langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[\\[\\]\\{\\}\\:\,]", PaletteIndex::Punctuation));
+        langDef.mTokenRegexStrings.emplace_back(
+            R"("([^"\\]|\\.)*")", PaletteIndex::String);
+        langDef.mTokenRegexStrings.emplace_back(
+            R"(-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?)", PaletteIndex::Number);
+        langDef.mTokenRegexStrings.emplace_back(
+            R"([A-Za-z_][A-Za-z0-9_]*)", PaletteIndex::Identifier);
+        langDef.mTokenRegexStrings.emplace_back(
+            R"([\[\]{}:,])", PaletteIndex::Punctuation);
 
-        langDef.block_comments.push_back(std::make_pair("/*","*/"));
-        langDef.single_line_comments.push_back("//");
-        langDef.single_line_comments.push_back("#");
-        langDef.mPreprocChar = '\0';
+        // C/JSONC comments
+        langDef.block_comments.emplace_back("/*", "*/");
+        langDef.single_line_comments.emplace_back("//");
 
-        langDef.mCaseSensitive = true;
-        langDef.mAutoIndentation = true;
+        langDef.mCaseSensitive     = true;
+        langDef.mAutoIndentation   = true;
+        langDef.mName              = "JSONC";
+        inited = true;
+    }
+    return langDef;
+}
 
-        langDef.mName = "JSONWithHash";
+const LanguageDefinition& JSONWithHash() {
+    static bool inited = false;
+    static LanguageDefinition langDef;
+    if (!inited) {
+        static const char* const keywords[] = { "true", "false", "null" };
+        for (auto& k : keywords)
+            langDef.mKeywords.insert(k);
 
+        langDef.mTokenRegexStrings.emplace_back(
+            R"("([^"\\]|\\.)*")", PaletteIndex::String);
+        langDef.mTokenRegexStrings.emplace_back(
+            R"(-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?)", PaletteIndex::Number);
+        langDef.mTokenRegexStrings.emplace_back(
+            R"([A-Za-z_][A-Za-z0-9_]*)", PaletteIndex::Identifier);
+        langDef.mTokenRegexStrings.emplace_back(
+            R"([\[\]{}:,])", PaletteIndex::Punctuation);
+
+        // C-style and hash comments
+        langDef.block_comments.emplace_back("/*", "*/");
+        langDef.single_line_comments.emplace_back("//");
+        langDef.single_line_comments.emplace_back("#");
+        langDef.mPreprocChar = '\0'; // not used here, keep disabled
+
+        langDef.mCaseSensitive     = true;
+        langDef.mAutoIndentation   = true;
+        langDef.mName              = "JSONWithHash";
         inited = true;
     }
     return langDef;
