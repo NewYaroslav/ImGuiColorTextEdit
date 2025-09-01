@@ -12,6 +12,22 @@ While it relies on Omar Cornut's https://github.com/ocornut/imgui, it does not f
 
 The code is (still) work in progress, please report if you find any issues.
 
+# Supported Languages
+
+| Language | Function |
+| --- | --- |
+| CPlusPlus | `static const LanguageDefinition& CPlusPlus();` |
+| HLSL | `static const LanguageDefinition& HLSL();` |
+| GLSL | `static const LanguageDefinition& GLSL();` |
+| SPIRV | `static const LanguageDefinition& SPIRV();` |
+| C | `static const LanguageDefinition& C();` |
+| SQL | `static const LanguageDefinition& SQL();` |
+| AngelScript | `static const LanguageDefinition& AngelScript();` |
+| Lua | `static const LanguageDefinition& Lua();` |
+| JSON | `static const LanguageDefinition& JSON();` |
+| JSONC | `static const LanguageDefinition& JSONC();` |
+| JSONWithHash | `static const LanguageDefinition& JSONWithHash();` |
+
 # Main features
  - approximates typical code editor look and feel (essential mouse/keyboard commands work - I mean, the commands _I_ normally use :))
  - undo/redo
