@@ -6,6 +6,11 @@ Compatible with Dear ImGui 1.92 and later.
 
 Demo project: https://github.com/BalazsJako/ColorTextEditorDemo
 
+## Build Flags
+
+- `IMGUICTE_USE_SDL2`: enable when using SDL2 backend to handle keyboard input.
+- `IMGUICTE_ENABLE_SPIRV`: enable to support SPIR-V highlighting, requiring `spirv_cross` and disabling certain non-SPIR-V features.
+
 This started as my attempt to write a relatively simple widget which provides text editing functionality with syntax highlighting. Now there are other contributors who provide valuable additions.
 
 While it relies on Omar Cornut's https://github.com/ocornut/imgui, it does not follow the "pure" one widget - one function approach. Since the editor has to maintain a relatively complex and large internal state, it did not seem to be practical to try and enforce fully immediate mode. It stores its internal state in an object instance which is reused across frames.
