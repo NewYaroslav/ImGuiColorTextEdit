@@ -1254,49 +1254,109 @@ void TextEditor::HandleKeyboardInputs()
 			ShortcutID curActionID = ShortcutID::Count;
 			bool additionalChecks = true;
 
-			SDL_Scancode sc1 = SDL_GetScancodeFromKey(sct.Key1);
+                        SDL_Scancode sc1 = SDL_GetScancodeFromKey(sct.Key1);
 
-			if ((ImGui::IsKeyPressed(sc1) || (sc1 == SDL_SCANCODE_RETURN && ImGui::IsKeyPressed(SDL_SCANCODE_KP_ENTER))) && ((sct.Key2 != -1 && ImGui::IsKeyPressed(SDL_GetScancodeFromKey(sct.Key2))) || sct.Key2 == -1)) {
-				if ((sct.Ctrl == ctrl) && (sct.Alt == alt) && (sct.Shift == shift)) {
+#if IMGUICTE_USE_SDL2
 
-					// PRESSED:
-					curActionID = (TextEditor::ShortcutID)i;
-					switch (curActionID) {
-						case ShortcutID::Paste:
-						case ShortcutID::Cut:
-						case ShortcutID::Redo: 
-						case ShortcutID::Undo:
-						case ShortcutID::ForwardDelete:
-						case ShortcutID::BackwardDelete:
-						case ShortcutID::DeleteLeft:
-						case ShortcutID::DeleteRight:
-						case ShortcutID::ForwardDeleteWord:
-						case ShortcutID::BackwardDeleteWord:
-							additionalChecks = !IsReadOnly();
-						break;
-						case ShortcutID::MoveUp:
-						case ShortcutID::MoveDown:
-						case ShortcutID::SelectUp:
-						case ShortcutID::SelectDown:
-							additionalChecks = !mACOpened;
-						break;
-						case ShortcutID::AutocompleteUp: 
-						case ShortcutID::AutocompleteDown:
-						case ShortcutID::AutocompleteSelect: 
-							additionalChecks = mACOpened;
-						break;
-						case ShortcutID::AutocompleteSelectActive: 
-							additionalChecks = mACOpened && mACSwitched;
-						break;
-						case ShortcutID::NewLine:
-						case ShortcutID::Indent:
-						case ShortcutID::Unindent:
-							additionalChecks = !IsReadOnly() && !mACOpened;
-						break;
-						default: break;
-					}
-				}
-			}
+                        if ((ImGui::IsKeyPressed(sc1) || (sc1 == SDL_SCANCODE_RETURN && ImGui::IsKeyPressed(SDL_SCANCODE_KP_ENTER))) && ((sct.Key2 != -1 && ImGui::IsKeyPressed(SDL_GetScancodeFromKey(sct.Key2))) || sct.Key2 == -1)) {
+                                if ((sct.Ctrl == ctrl) && (sct.Alt == alt) && (sct.Shift == shift)) {
+
+                                        // PRESSED:
+                                        curActionID = (TextEditor::ShortcutID)i;
+                                        switch (curActionID) {
+                                                case ShortcutID::Paste:
+                                                case ShortcutID::Cut:
+                                                case ShortcutID::Redo:
+                                                case ShortcutID::Undo:
+                                                case ShortcutID::ForwardDelete:
+                                                case ShortcutID::BackwardDelete:
+                                                case ShortcutID::DeleteLeft:
+                                                case ShortcutID::DeleteRight:
+                                                case ShortcutID::ForwardDeleteWord:
+                                                case ShortcutID::BackwardDeleteWord:
+                                                        additionalChecks = !IsReadOnly();
+                                                break;
+                                                case ShortcutID::MoveUp:
+                                                case ShortcutID::MoveDown:
+                                                case ShortcutID::SelectUp:
+                                                case ShortcutID::SelectDown:
+                                                        additionalChecks = !mACOpened;
+                                                break;
+                                                case ShortcutID::AutocompleteUp:
+                                                case ShortcutID::AutocompleteDown:
+                                                case ShortcutID::AutocompleteSelect:
+                                                        additionalChecks = mACOpened;
+                                                break;
+                                                case ShortcutID::AutocompleteSelectActive:
+                                                        additionalChecks = mACOpened && mACSwitched;
+                                                break;
+                                                case ShortcutID::NewLine:
+                                                case ShortcutID::Indent:
+                                                case ShortcutID::Unindent:
+                                                        additionalChecks = !IsReadOnly() && !mACOpened;
+                                                break;
+                                                default: break;
+                                        }
+                                }
+                        }
+
+#else
+
+                        const ImGuiIO& io = ImGui::GetIO();
+                        const bool ctrl  = (io.KeyMods & ImGuiMod_Ctrl)  != 0;
+                        const bool alt   = (io.KeyMods & ImGuiMod_Alt)   != 0;
+                        const bool shift = (io.KeyMods & ImGuiMod_Shift) != 0;
+
+                        const ImGuiKey k1 = (ImGuiKey)sct.Key1;
+                        const bool pressed1 = ImGui::IsKeyPressed(k1) ||
+                                              (k1 == ImGuiKey_Enter && ImGui::IsKeyPressed(ImGuiKey_KeypadEnter));
+                        const bool pressed2 = (sct.Key2 != -1) ? ImGui::IsKeyPressed((ImGuiKey)sct.Key2) : true;
+
+                        if (pressed1 && pressed2) {
+                                if (((sct.Ctrl == 0 && !ctrl) || (sct.Ctrl == 1 && ctrl) || (sct.Ctrl == 2)) &&
+                                    ((sct.Alt  == 0 && !alt ) || (sct.Alt  == 1 && alt ) || (sct.Alt  == 2)) &&
+                                    ((sct.Shift== 0 && !shift) || (sct.Shift== 1 && shift) || (sct.Shift== 2))) {
+
+                                        // PRESSED:
+                                        curActionID = (TextEditor::ShortcutID)i;
+                                        switch (curActionID) {
+                                                case ShortcutID::Paste:
+                                                case ShortcutID::Cut:
+                                                case ShortcutID::Redo:
+                                                case ShortcutID::Undo:
+                                                case ShortcutID::ForwardDelete:
+                                                case ShortcutID::BackwardDelete:
+                                                case ShortcutID::DeleteLeft:
+                                                case ShortcutID::DeleteRight:
+                                                case ShortcutID::ForwardDeleteWord:
+                                                case ShortcutID::BackwardDeleteWord:
+                                                        additionalChecks = !IsReadOnly();
+                                                break;
+                                                case ShortcutID::MoveUp:
+                                                case ShortcutID::MoveDown:
+                                                case ShortcutID::SelectUp:
+                                                case ShortcutID::SelectDown:
+                                                        additionalChecks = !mACOpened;
+                                                break;
+                                                case ShortcutID::AutocompleteUp:
+                                                case ShortcutID::AutocompleteDown:
+                                                case ShortcutID::AutocompleteSelect:
+                                                        additionalChecks = mACOpened;
+                                                break;
+                                                case ShortcutID::AutocompleteSelectActive:
+                                                        additionalChecks = mACOpened && mACSwitched;
+                                                break;
+                                                case ShortcutID::NewLine:
+                                                case ShortcutID::Indent:
+                                                case ShortcutID::Unindent:
+                                                        additionalChecks = !IsReadOnly() && !mACOpened;
+                                                break;
+                                                default: break;
+                                        }
+                                }
+                        }
+
+#endif
 
 			if (additionalChecks && curActionID != ShortcutID::Count)
 				actionID = curActionID;
