@@ -266,6 +266,24 @@ namespace ImTextEdit {
     ///  - Order matters: numbers (incl. Infinity/NaN/hex) go before identifiers.
     ///  - Strings support line continuation via backslash-newline (\\\r?\n).
     const LanguageDefinition& JSON5();
+    
+    /// \brief Markdown language definition (basic highlighting).
+    const LanguageDefinition& Markdown();
+    
+    /// \brief dotenv (.env) language definition.
+    const LanguageDefinition& DotEnv();
+    
+    /// \brief XML language definition.
+    const LanguageDefinition& XML();
+    
+    /// \brief CSV language definition (comma/semicolon separated, quoted fields).
+    const LanguageDefinition& CSV();
+    
+    /// \brief HTML language definition.
+    const LanguageDefinition& HTML();
+    
+    /// \brief CSS language definition.
+    const LanguageDefinition& CSS();
 
     enum class DebugAction
     {

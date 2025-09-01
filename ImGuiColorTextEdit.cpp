@@ -6893,4 +6893,267 @@ const LanguageDefinition& JSON5() {
     return langDef;
 }
 
+const LanguageDefinition& Markdown() {
+    static bool inited = false;
+    static LanguageDefinition langDef;
+    if (!inited) {
+        // Code spans: `code`
+        langDef.mTokenRegexStrings.emplace_back(
+            R"(`[^`]*`)", PaletteIndex::String);
+
+        // Code fence marker: ```
+        langDef.mTokenRegexStrings.emplace_back(
+            R"(```+)", PaletteIndex::Preprocessor);
+
+        // Links and images: [text](url), ![alt](url)
+        langDef.mTokenRegexStrings.emplace_back(
+            R"(!?\[[^\]\n]*\]\([^\)\n]*\))", PaletteIndex::KnownIdentifier);
+
+        // Headings markers: #, ##, ..., ######
+        langDef.mTokenRegexStrings.emplace_back(
+            R"(#{1,6})", PaletteIndex::Preprocessor);
+
+        // Emphasis markers: **, __, *, _
+        langDef.mTokenRegexStrings.emplace_back(
+            R"(\*\*|__|\*|_)", PaletteIndex::Punctuation);
+
+        // Blockquote marker
+        langDef.mTokenRegexStrings.emplace_back(
+            R"(>)", PaletteIndex::Punctuation);
+
+        // Lists: -, +, *
+        langDef.mTokenRegexStrings.emplace_back(
+            R"(^\s*[-+*](?=\s))", PaletteIndex::Preprocessor);
+
+        // Horizontal rules: --- , *** , ___
+        langDef.mTokenRegexStrings.emplace_back(
+            R"(-{3,}|\*{3,}|_{3,})", PaletteIndex::Preprocessor);
+
+        // Inline HTML entities
+        langDef.mTokenRegexStrings.emplace_back(
+            R"(&[A-Za-z0-9#]+;)", PaletteIndex::Preprocessor);
+
+        // Numbers (for tables/etc.)
+        langDef.mTokenRegexStrings.emplace_back(
+            R"([+-]?((\d+(\.\d*)?)|(\.\d+))([eE][+-]?\d+)?)", PaletteIndex::Number);
+
+        // Generic words as identifiers
+        langDef.mTokenRegexStrings.emplace_back(
+            R"([A-Za-z_][A-Za-z0-9_\-]*)", PaletteIndex::Identifier);
+
+        langDef.mCaseSensitive   = true;
+        langDef.mAutoIndentation = false;
+        langDef.mName            = "Markdown";
+        inited = true;
+    }
+    return langDef;
+}
+
+const LanguageDefinition& DotEnv() {
+    static bool inited = false;
+    static LanguageDefinition langDef;
+    if (!inited) {
+        // Common directives as "keywords"
+        langDef.mKeywords.insert("export");
+        langDef.mKeywords.insert("unset");
+
+        // Variable interpolation: ${VAR}
+        langDef.mTokenRegexStrings.emplace_back(
+            R"(\$\{[A-Za-z_][A-Za-z0-9_]*\})", PaletteIndex::Preprocessor);
+
+        // Keys (identifiers)
+        langDef.mTokenRegexStrings.emplace_back(
+            R"([A-Za-z_][A-Za-z0-9_]*)", PaletteIndex::Identifier);
+
+        // Equals
+        langDef.mTokenRegexStrings.emplace_back(
+            R"(=)", PaletteIndex::Punctuation);
+
+        // Quoted values: "..." or '...' (allow escapes)
+        langDef.mTokenRegexStrings.emplace_back(
+            R"("([^"\\]|\\.)*")", PaletteIndex::String);
+        langDef.mTokenRegexStrings.emplace_back(
+            R"('([^'\\]|\\.)*')", PaletteIndex::String);
+
+        // Unquoted values (till comment or EOL) — coarse
+        langDef.mTokenRegexStrings.emplace_back(
+            R"([^#\s][^#\r\n]*)", PaletteIndex::KnownIdentifier);
+
+        // Numbers
+        langDef.mTokenRegexStrings.emplace_back(
+            R"([+-]?((\d+(\.\d*)?)|(\.\d+))([eE][+-]?\d+)?)", PaletteIndex::Number);
+
+        // Comments
+        langDef.single_line_comments.emplace_back("#");
+
+        langDef.mCaseSensitive   = true;
+        langDef.mAutoIndentation = false;
+        langDef.mName            = ".env";
+        inited = true;
+    }
+    return langDef;
+}
+
+const LanguageDefinition& XML() {
+    static bool inited = false;
+    static LanguageDefinition langDef;
+    if (!inited) {
+        // Strings inside attributes
+        langDef.mTokenRegexStrings.emplace_back(
+            R"("([^"\\]|\\.)*")", PaletteIndex::String);
+        langDef.mTokenRegexStrings.emplace_back(
+            R"('([^'\\]|\\.)*')", PaletteIndex::String);
+
+        // Tag names: <tag, </tag, <?xml
+        langDef.mTokenRegexStrings.emplace_back(
+            R"(<\/?\??[A-Za-z_:][A-Za-z0-9_.:\-]*\??)", PaletteIndex::Identifier);
+
+        // Attribute names (coarse)
+        langDef.mTokenRegexStrings.emplace_back(
+            R"([A-Za-z_:][A-Za-z0-9_.:\-]*)", PaletteIndex::KnownIdentifier);
+
+        // Entities: &amp; &lt; &#xA0; ...
+        langDef.mTokenRegexStrings.emplace_back(
+            R"(&[A-Za-z0-9#]+;)", PaletteIndex::Preprocessor);
+
+        // Punctuation within tags
+        langDef.mTokenRegexStrings.emplace_back(
+            R"([<>\/=\?])", PaletteIndex::Punctuation);
+
+        // Comments and special blocks
+        langDef.block_comments.emplace_back("<!--", "-->");
+        langDef.block_comments.emplace_back("<![CDATA[", "]]>");
+        langDef.block_comments.emplace_back("<?", "?>"); // processing instruction
+
+        langDef.mCaseSensitive   = true;
+        langDef.mAutoIndentation = true;
+        langDef.mName            = "XML";
+        inited = true;
+    }
+    return langDef;
+}
+
+const LanguageDefinition& CSV() {
+    static bool inited = false;
+    static LanguageDefinition langDef;
+    if (!inited) {
+        // Quoted field: " ... "" ... "
+        langDef.mTokenRegexStrings.emplace_back(
+            R"("([^"]|"")*")", PaletteIndex::String);
+
+        // Separators: comma or semicolon
+        langDef.mTokenRegexStrings.emplace_back(
+            R"([,;])", PaletteIndex::Punctuation);
+
+        // Numbers
+        langDef.mTokenRegexStrings.emplace_back(
+            R"([+-]?((\d+(\.\d*)?)|(\.\d+))([eE][+-]?\d+)?)", PaletteIndex::Number);
+
+        // Bareword cell (no separators/quotes)
+        langDef.mTokenRegexStrings.emplace_back(
+            R"([^,\s;][^,;]*)", PaletteIndex::Identifier);
+
+        // Optional: non-standard comments starting with # (many tools support)
+        langDef.single_line_comments.emplace_back("#");
+
+        langDef.mCaseSensitive   = true;
+        langDef.mAutoIndentation = false;
+        langDef.mName            = "CSV";
+        inited = true;
+    }
+    return langDef;
+}
+
+const LanguageDefinition& HTML() {
+    static bool inited = false;
+    static LanguageDefinition langDef;
+    if (!inited) {
+        // Strings inside attributes
+        langDef.mTokenRegexStrings.emplace_back(
+            R"("([^"\\]|\\.)*")", PaletteIndex::String);
+        langDef.mTokenRegexStrings.emplace_back(
+            R"('([^'\\]|\\.)*')", PaletteIndex::String);
+
+        // Tag names: <div, </div, <!DOCTYPE, <?php ?> (generic)
+        langDef.mTokenRegexStrings.emplace_back(
+            R"(<\/?\??[A-Za-z_:][A-Za-z0-9_.:\-]*\??)", PaletteIndex::Identifier);
+
+        // Attribute names (coarse)
+        langDef.mTokenRegexStrings.emplace_back(
+            R"([A-Za-z_:][A-Za-z0-9_.:\-]*)", PaletteIndex::KnownIdentifier);
+
+        // Entities
+        langDef.mTokenRegexStrings.emplace_back(
+            R"(&[A-Za-z0-9#]+;)", PaletteIndex::Preprocessor);
+
+        // Punctuation
+        langDef.mTokenRegexStrings.emplace_back(
+            R"([<>\/=\?])", PaletteIndex::Punctuation);
+
+        // Comments and special blocks
+        langDef.block_comments.emplace_back("<!--", "-->");
+        langDef.block_comments.emplace_back("<![CDATA[", "]]>");
+        langDef.block_comments.emplace_back("<?", "?>"); // processing instruction
+
+        langDef.mCaseSensitive   = true;
+        langDef.mAutoIndentation = true;
+        langDef.mName            = "HTML";
+        inited = true;
+    }
+    return langDef;
+}
+
+const LanguageDefinition& CSS() {
+    static bool inited = false;
+    static LanguageDefinition langDef;
+    if (!inited) {
+        // At-rules as "keywords"
+        langDef.mKeywords.insert("@import");
+        langDef.mKeywords.insert("@media");
+        langDef.mKeywords.insert("@supports");
+        langDef.mKeywords.insert("@font-face");
+        langDef.mKeywords.insert("@keyframes");
+        langDef.mKeywords.insert("@page");
+
+        // Strings
+        langDef.mTokenRegexStrings.emplace_back(
+            R"("([^"\\]|\\.)*")", PaletteIndex::String);
+        langDef.mTokenRegexStrings.emplace_back(
+            R"('([^'\\]|\\.)*')", PaletteIndex::String);
+
+        // url(...)
+        langDef.mTokenRegexStrings.emplace_back(
+            R"(url\(([^)]*)\))", PaletteIndex::String);
+
+        // Hex colors: #fff or #ffffff
+        langDef.mTokenRegexStrings.emplace_back(
+            R"(#(?:[0-9A-Fa-f]{3}){1,2}\b)", PaletteIndex::Number);
+
+        // Numbers with optional units: 12, 1.5rem, .75em, 100%
+        langDef.mTokenRegexStrings.emplace_back(
+            R"([+-]?((\d+(\.\d*)?)|(\.\d+))([A-Za-z%]+)?)", PaletteIndex::Number);
+
+        // Identifiers (selectors/properties)
+        langDef.mTokenRegexStrings.emplace_back(
+            R"([A-Za-z_-][A-Za-z0-9_-]*)", PaletteIndex::Identifier);
+
+        // Pseudo-classes/elements (:hover, ::after)
+        langDef.mTokenRegexStrings.emplace_back(
+            R"(::?[A-Za-z_-][A-Za-z0-9_-]*)", PaletteIndex::KnownIdentifier);
+
+        // Punctuation and combinators
+        langDef.mTokenRegexStrings.emplace_back(
+            R"([{}:;,\.\#>\+\*\[\]\(\)=])", PaletteIndex::Punctuation);
+
+        // Comments
+        langDef.block_comments.emplace_back("/*", "*/");
+
+        langDef.mCaseSensitive   = true;
+        langDef.mAutoIndentation = true;
+        langDef.mName            = "CSS";
+        inited = true;
+    }
+    return langDef;
+}
+
 } // namespace ImTextEdit

@@ -52,6 +52,12 @@ The codebase remains a work in progress; please report any issues.
 | JSONC | `const LanguageDefinition& JSONC();` |
 | JSON5        | `const LanguageDefinition& JSON5();`        |
 | JSONWithHash | `const LanguageDefinition& JSONWithHash();` |
+| Markdown  | `const LanguageDefinition& Markdown();` |
+| DotEnv    | `const LanguageDefinition& DotEnv();`   |
+| XML       | `const LanguageDefinition& XML();`      |
+| CSV       | `const LanguageDefinition& CSV();`      |
+| HTML      | `const LanguageDefinition& HTML();`     |
+| CSS       | `const LanguageDefinition& CSS();`      |
 
 # JSON editor example
 
