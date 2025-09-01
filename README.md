@@ -1,10 +1,29 @@
 # ImGuiColorTextEdit
 Syntax highlighting text editor for ImGui
-Compatible with Dear ImGui 1.92 and later.
+This project is a fork of [dfranx/ImGuiColorTextEdit](https://github.com/dfranx/ImGuiColorTextEdit).
+
+Compatible with Dear ImGui 1.92 and later. Deprecated ImGui APIs such as `GetKeyIndex` have been removed.
 
 ![Screenshot](https://github.com/BalazsJako/ImGuiColorTextEdit/wiki/ImGuiTextEdit.png "Screenshot")
 
 Demo project: https://github.com/BalazsJako/ColorTextEditorDemo
+
+## Public API
+
+### TextEditor
+- `void Render(const char* title, const ImVec2& size = ImVec2(), bool border = false);` – draw the editor.
+- `void SetText(const std::string& text);` / `std::string GetText() const;`
+- `void SetLanguageDefinition(const LanguageDefinition& lang);` – enable syntax highlighting.
+- `void SetPalette(const TextEditor::Palette& colors);` / `const TextEditor::Palette& GetPalette() const;`
+- `void SetReadOnly(bool value);` / `bool IsReadOnly();`
+- `Coordinates GetCursorPosition() const;` / `void SetCursorPosition(const Coordinates& pos);`
+- `void InsertText(const std::string& text, bool indent = false);`
+- `void Undo();` `void Redo();` `void Copy();` `void Cut();` `void Paste();` `void Delete();`
+
+### Helpers
+- Language definitions: `CPlusPlus()`, `HLSL()`, `GLSL()`, `SPIRV()`, `C()`, `SQL()`, `AngelScript()`, `Lua()`, `JSON()`, `JSONC()`, `JSONWithHash()`
+- Palettes: `GetDarkPalette()`, `GetLightPalette()`, `GetRetroBluePalette()`
+- Shortcuts: `GetDefaultShortcuts()`
 
 ## Build Flags
 
