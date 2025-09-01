@@ -275,7 +275,8 @@ public:
         Keywords mKeywords;
         Identifiers mIdentifiers;
         Identifiers mPreprocIdentifiers;
-        std::string mCommentStart, mCommentEnd, mSingleLineComment;
+        std::vector<std::string> single_line_comments;
+        std::vector<std::pair<std::string,std::string>> block_comments;
         char mPreprocChar;
         bool mAutoIndentation;
 

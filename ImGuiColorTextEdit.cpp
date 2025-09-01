@@ -5565,34 +5565,39 @@ void TextEditor::ColorizeInternal()
                     {
                         auto pred = [](const char& a, const Glyph& b) { return a == b.mChar; };
                         auto from = line.begin() + currentIndex;
-                        auto& startStr = mLanguageDefinition.mCommentStart;
-                        auto& singleStartStr = mLanguageDefinition.mSingleLineComment;
 
-                        if (singleStartStr.size() > 0 &&
-                            currentIndex + singleStartStr.size() <= line.size() &&
-                            equals(singleStartStr.begin(), singleStartStr.end(), from, from + singleStartStr.size(), pred))
+                        for (const auto& slc : mLanguageDefinition.single_line_comments)
                         {
-                            withinSingleLineComment = true;
+                            if (currentIndex + slc.size() <= line.size() &&
+                                equals(slc.begin(), slc.end(), from, from + slc.size(), pred))
+                            {
+                                withinSingleLineComment = true;
+                                break;
+                            }
                         }
-                        else if (!withinSingleLineComment && currentIndex + startStr.size() <= line.size() &&
-                            equals(startStr.begin(), startStr.end(), from, from + startStr.size(), pred))
-                        {
-                            commentStartLine = currentLine;
-                            commentStartIndex = currentIndex;
-                        }
+                        if (!withinSingleLineComment)
+                            for (const auto& bc : mLanguageDefinition.block_comments)
+                                if (currentIndex + bc.first.size() <= line.size() &&
+                                    equals(bc.first.begin(), bc.first.end(), from, from + bc.first.size(), pred))
+                                {
+                                    commentStartLine = currentLine;
+                                    commentStartIndex = currentIndex;
+                                    break;
+                                }
 
                         inComment = inComment = (commentStartLine < currentLine || (commentStartLine == currentLine && commentStartIndex <= currentIndex));
 
                         line[currentIndex].mMultiLineComment = inComment;
                         line[currentIndex].mComment = withinSingleLineComment;
 
-                        auto& endStr = mLanguageDefinition.mCommentEnd;
-                        if (currentIndex + 1 >= (int)endStr.size() &&
-                            equals(endStr.begin(), endStr.end(), from + 1 - endStr.size(), from + 1, pred))
-                        {
-                            commentStartIndex = endIndex;
-                            commentStartLine = endLine;
-                        }
+                        for (const auto& bc : mLanguageDefinition.block_comments)
+                            if (currentIndex + 1 >= (int)bc.second.size() &&
+                                equals(bc.second.begin(), bc.second.end(), from + 1 - bc.second.size(), from + 1, pred))
+                            {
+                                commentStartIndex = endIndex;
+                                commentStartLine = endLine;
+                                break;
+                            }
                     }
                 }
                 line[currentIndex].mPreprocessor = withinPreproc;
@@ -6035,9 +6040,8 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::CPlusPlus(
             return paletteIndex != PaletteIndex::Max;
         };
 
-        langDef.mCommentStart = "/*";
-        langDef.mCommentEnd = "*/";
-        langDef.mSingleLineComment = "//";
+        langDef.block_comments.push_back(std::make_pair("/*","*/"));
+        langDef.single_line_comments.push_back("//");
 
         langDef.mCaseSensitive = true;
         langDef.mAutoIndentation = true;
@@ -6088,9 +6092,8 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::HLSL()
         langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[a-zA-Z_][a-zA-Z0-9_]*", PaletteIndex::Identifier));
         langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", PaletteIndex::Punctuation));
 
-        langDef.mCommentStart = "/*";
-        langDef.mCommentEnd = "*/";
-        langDef.mSingleLineComment = "//";
+        langDef.block_comments.push_back(std::make_pair("/*","*/"));
+        langDef.single_line_comments.push_back("//");
 
         langDef.mCaseSensitive = true;
         langDef.mAutoIndentation = true;
@@ -6275,9 +6278,8 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::GLSL()
         langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[a-zA-Z_][a-zA-Z0-9_]*", PaletteIndex::Identifier));
         langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", PaletteIndex::Punctuation));
 
-        langDef.mCommentStart = "/*";
-        langDef.mCommentEnd = "*/";
-        langDef.mSingleLineComment = "//";
+        langDef.block_comments.push_back(std::make_pair("/*","*/"));
+        langDef.single_line_comments.push_back("//");
 
         langDef.mCaseSensitive = true;
         langDef.mAutoIndentation = true;
@@ -6475,9 +6477,8 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::SPIRV()
                 langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("0[0-7]+[Uu]?[lL]?[lL]?", PaletteIndex::Number));
                 langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", PaletteIndex::Number));
 
-                langDef.mCommentStart = "/*";
-                langDef.mCommentEnd = "*/";
-                langDef.mSingleLineComment = ";";
+                langDef.block_comments.push_back(std::make_pair("/*","*/"));
+                langDef.single_line_comments.push_back(";");
 
                 langDef.mCaseSensitive = true;
                 langDef.mAutoIndentation = false;
@@ -6552,9 +6553,8 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::C()
             return paletteIndex != PaletteIndex::Max;
         };
 
-        langDef.mCommentStart = "/*";
-        langDef.mCommentEnd = "*/";
-        langDef.mSingleLineComment = "//";
+        langDef.block_comments.push_back(std::make_pair("/*","*/"));
+        langDef.single_line_comments.push_back("//");
         
         langDef.mCaseSensitive = true;
         langDef.mAutoIndentation = true;
@@ -6616,9 +6616,8 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::SQL()
         langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[a-zA-Z_][a-zA-Z0-9_]*", PaletteIndex::Identifier));
         langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", PaletteIndex::Punctuation));
 
-        langDef.mCommentStart = "/*";
-        langDef.mCommentEnd = "*/";
-        langDef.mSingleLineComment = "//";
+        langDef.block_comments.push_back(std::make_pair("/*","*/"));
+        langDef.single_line_comments.push_back("//");
 
         langDef.mCaseSensitive = false;
         langDef.mAutoIndentation = false;
@@ -6666,9 +6665,8 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::AngelScrip
         langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[a-zA-Z_][a-zA-Z0-9_]*", PaletteIndex::Identifier));
         langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", PaletteIndex::Punctuation));
 
-        langDef.mCommentStart = "/*";
-        langDef.mCommentEnd = "*/";
-        langDef.mSingleLineComment = "//";
+        langDef.block_comments.push_back(std::make_pair("/*","*/"));
+        langDef.single_line_comments.push_back("//");
 
         langDef.mCaseSensitive = true;
         langDef.mAutoIndentation = true;
@@ -6720,9 +6718,8 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::Lua()
         langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[a-zA-Z_][a-zA-Z0-9_]*", PaletteIndex::Identifier));
         langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", PaletteIndex::Punctuation));
 
-        langDef.mCommentStart = "--[[";
-        langDef.mCommentEnd = "]]";
-        langDef.mSingleLineComment = "--";
+        langDef.block_comments.push_back(std::make_pair("--[[", "]]"));
+        langDef.single_line_comments.push_back("--");
 
         langDef.mCaseSensitive = true;
         langDef.mAutoIndentation = false;
