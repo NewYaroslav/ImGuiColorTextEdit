@@ -1,5 +1,11 @@
+#ifndef IMGUICTE_USE_SDL2
+#define IMGUICTE_USE_SDL2 0
+#endif
+
+#if IMGUICTE_USE_SDL2
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_keyboard.h>
+#endif
 #include <algorithm>
 #include <functional>
 #include <chrono>
