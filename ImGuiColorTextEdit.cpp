@@ -1,5 +1,3 @@
-#include <SDL2/SDL_events.h>
-#include <SDL2/SDL_keyboard.h>
 #include <algorithm>
 #include <functional>
 #include <chrono>
@@ -20,6 +18,31 @@
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include <imgui/imgui.h> // for imGui::GetCurrentWindow()
 #include <imgui/imgui_internal.h>
+
+#ifndef IMGUICTE_USE_SDL2
+#define IMGUICTE_USE_SDL2 0
+#endif
+
+#if IMGUICTE_USE_SDL2
+#  include <SDL2/SDL.h>
+#endif
+
+// Helper for tri-state modifier matching (0=Off, 1=On, 2=Any)
+static inline bool match_tristate_int(int want, bool has) {
+        if (want == 2) return true;   // Any
+        return (want == 1) ? has : !has;
+}
+
+// Helper: Is Enter or KeypadEnter pressed (ImGui path)
+static inline bool is_pressed_enter_or_kp(ImGuiKey k) {
+        if (k == ImGuiKey_Enter || k == ImGuiKey_KeypadEnter)
+                return ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter);
+        return ImGui::IsKeyPressed(k);
+}
+
+// Usage:
+// - Default (no SDL): build as usual; editor uses ImGuiKey/ImGuiMod.
+// - With SDL: define IMGUICTE_USE_SDL2=1 (compile flag) to re-enable SDL path.
 
 // TODO
 // - multiline comments vs single-line: latter is blocking start of a ML
@@ -142,10 +165,10 @@ TextEditor::TextEditor()
 
 const std::vector<TextEditor::Shortcut> TextEditor::GetDefaultShortcuts()
 {
-	std::vector<TextEditor::Shortcut> ret;
-	ret.resize((int)TextEditor::ShortcutID::Count);
-
-	ret[(int)TextEditor::ShortcutID::Undo] = TextEditor::Shortcut(SDLK_z, -1, 0, 1, 0); // CTRL+Z
+        std::vector<TextEditor::Shortcut> ret;
+        ret.resize((int)TextEditor::ShortcutID::Count);
+#if IMGUICTE_USE_SDL2
+        ret[(int)TextEditor::ShortcutID::Undo] = TextEditor::Shortcut(SDLK_z, -1, 0, 1, 0); // CTRL+Z
 	ret[(int)TextEditor::ShortcutID::Redo] = TextEditor::Shortcut(SDLK_y, -1, 0, 1, 0); // CTRL+Y
 	ret[(int)TextEditor::ShortcutID::MoveUp] = TextEditor::Shortcut(SDLK_UP, -1, 0, 0, 0); // UP ARROW
 	ret[(int)TextEditor::ShortcutID::SelectUp] = TextEditor::Shortcut(SDLK_UP, -1, 0, 0, 1); // SHIFT + UP ARROW
@@ -202,9 +225,74 @@ const std::vector<TextEditor::Shortcut> TextEditor::GetDefaultShortcuts()
 	ret[(int)TextEditor::ShortcutID::DebugJumpHere] = TextEditor::Shortcut(SDLK_h, -1, 1, 1, 0); // CTRL+ALT+H
 	ret[(int)TextEditor::ShortcutID::DuplicateLine] = TextEditor::Shortcut(SDLK_d, -1, 0, 1, 0);	// CTRL+D
 	ret[(int)TextEditor::ShortcutID::CommentLines] = TextEditor::Shortcut(SDLK_k, -1, 0, 1, 1); // CTRL+SHIFT+K
-	ret[(int)TextEditor::ShortcutID::UncommentLines] = TextEditor::Shortcut(SDLK_u, -1, 0, 1, 1); // CTRL+SHIFT+U
+        ret[(int)TextEditor::ShortcutID::UncommentLines] = TextEditor::Shortcut(SDLK_u, -1, 0, 1, 1); // CTRL+SHIFT+U
 
-	return ret;
+#else
+        auto S = [](ImGuiKey k1, ImGuiKey k2, int c, int a, int s) {
+                return TextEditor::Shortcut{ (int)k1, (int)k2, c, a, s };
+        };
+
+        ret[(int)TextEditor::ShortcutID::Undo]               = S(ImGuiKey_Z, ImGuiKey_None, 1, 0, 0); // Ctrl+Z
+        ret[(int)TextEditor::ShortcutID::Redo]               = S(ImGuiKey_Y, ImGuiKey_None, 1, 0, 0); // Ctrl+Y
+        ret[(int)TextEditor::ShortcutID::MoveUp]             = S(ImGuiKey_UpArrow,    ImGuiKey_None, 0, 0, 0);
+        ret[(int)TextEditor::ShortcutID::SelectUp]           = S(ImGuiKey_UpArrow,    ImGuiKey_None, 0, 0, 1);
+        ret[(int)TextEditor::ShortcutID::MoveDown]           = S(ImGuiKey_DownArrow,  ImGuiKey_None, 0, 0, 0);
+        ret[(int)TextEditor::ShortcutID::SelectDown]         = S(ImGuiKey_DownArrow,  ImGuiKey_None, 0, 0, 1);
+        ret[(int)TextEditor::ShortcutID::MoveLeft]           = S(ImGuiKey_LeftArrow,  ImGuiKey_None, 0, 0, 0);
+        ret[(int)TextEditor::ShortcutID::SelectLeft]         = S(ImGuiKey_LeftArrow,  ImGuiKey_None, 0, 0, 1);
+        ret[(int)TextEditor::ShortcutID::MoveWordLeft]       = S(ImGuiKey_LeftArrow,  ImGuiKey_None, 1, 0, 0); // Ctrl+Left
+        ret[(int)TextEditor::ShortcutID::SelectWordLeft]     = S(ImGuiKey_LeftArrow,  ImGuiKey_None, 1, 0, 1); // Ctrl+Shift+Left
+        ret[(int)TextEditor::ShortcutID::MoveRight]          = S(ImGuiKey_RightArrow, ImGuiKey_None, 0, 0, 0);
+        ret[(int)TextEditor::ShortcutID::SelectRight]        = S(ImGuiKey_RightArrow, ImGuiKey_None, 0, 0, 1);
+        ret[(int)TextEditor::ShortcutID::MoveWordRight]      = S(ImGuiKey_RightArrow, ImGuiKey_None, 1, 0, 0); // Ctrl+Right
+        ret[(int)TextEditor::ShortcutID::SelectWordRight]    = S(ImGuiKey_RightArrow, ImGuiKey_None, 1, 0, 1); // Ctrl+Shift+Right
+        ret[(int)TextEditor::ShortcutID::MoveUpBlock]        = S(ImGuiKey_PageUp,   ImGuiKey_None, 0, 0, 0);
+        ret[(int)TextEditor::ShortcutID::SelectUpBlock]      = S(ImGuiKey_PageUp,   ImGuiKey_None, 0, 0, 1);
+        ret[(int)TextEditor::ShortcutID::MoveDownBlock]      = S(ImGuiKey_PageDown, ImGuiKey_None, 0, 0, 0);
+        ret[(int)TextEditor::ShortcutID::SelectDownBlock]    = S(ImGuiKey_PageDown, ImGuiKey_None, 0, 0, 1);
+        ret[(int)TextEditor::ShortcutID::MoveTop]            = S(ImGuiKey_Home, ImGuiKey_None, 1, 0, 0); // Ctrl+Home
+        ret[(int)TextEditor::ShortcutID::SelectTop]          = S(ImGuiKey_Home, ImGuiKey_None, 1, 0, 1); // Ctrl+Shift+Home
+        ret[(int)TextEditor::ShortcutID::MoveBottom]         = S(ImGuiKey_End,  ImGuiKey_None, 1, 0, 0); // Ctrl+End
+        ret[(int)TextEditor::ShortcutID::SelectBottom]       = S(ImGuiKey_End,  ImGuiKey_None, 1, 0, 1); // Ctrl+Shift+End
+        ret[(int)TextEditor::ShortcutID::MoveStartLine]      = S(ImGuiKey_Home, ImGuiKey_None, 0, 0, 0);
+        ret[(int)TextEditor::ShortcutID::SelectStartLine]    = S(ImGuiKey_Home, ImGuiKey_None, 0, 0, 1);
+        ret[(int)TextEditor::ShortcutID::MoveEndLine]        = S(ImGuiKey_End,  ImGuiKey_None, 0, 0, 0);
+        ret[(int)TextEditor::ShortcutID::SelectEndLine]      = S(ImGuiKey_End,  ImGuiKey_None, 0, 0, 1);
+        ret[(int)TextEditor::ShortcutID::ForwardDelete]      = S(ImGuiKey_Delete,    ImGuiKey_None, 0, 0, 0);
+        ret[(int)TextEditor::ShortcutID::ForwardDeleteWord]  = S(ImGuiKey_Delete,    ImGuiKey_None, 1, 0, 0); // Ctrl+Delete
+        ret[(int)TextEditor::ShortcutID::DeleteRight]        = S(ImGuiKey_Delete,    ImGuiKey_None, 0, 0, 1); // Shift+Delete
+        ret[(int)TextEditor::ShortcutID::BackwardDelete]     = S(ImGuiKey_Backspace, ImGuiKey_None, 0, 0, 0);
+        ret[(int)TextEditor::ShortcutID::BackwardDeleteWord] = S(ImGuiKey_Backspace, ImGuiKey_None, 1, 0, 0); // Ctrl+Backspace
+        ret[(int)TextEditor::ShortcutID::DeleteLeft]         = S(ImGuiKey_Backspace, ImGuiKey_None, 0, 0, 1); // Shift+Backspace
+        ret[(int)TextEditor::ShortcutID::OverwriteCursor]    = S(ImGuiKey_Insert, ImGuiKey_None, 0, 0, 0);
+        ret[(int)TextEditor::ShortcutID::Copy]               = S(ImGuiKey_C, ImGuiKey_None, 1, 0, 0);
+        ret[(int)TextEditor::ShortcutID::Paste]              = S(ImGuiKey_V, ImGuiKey_None, 1, 0, 0);
+        ret[(int)TextEditor::ShortcutID::Cut]                = S(ImGuiKey_X, ImGuiKey_None, 1, 0, 0);
+        ret[(int)TextEditor::ShortcutID::SelectAll]          = S(ImGuiKey_A, ImGuiKey_None, 1, 0, 0);
+        ret[(int)TextEditor::ShortcutID::AutocompleteOpen]   = S(ImGuiKey_Space, ImGuiKey_None, 1, 0, 0); // Ctrl+Space
+        ret[(int)TextEditor::ShortcutID::AutocompleteSelect] = S(ImGuiKey_Tab,   ImGuiKey_None, 0, 0, 0);
+        ret[(int)TextEditor::ShortcutID::AutocompleteSelectActive] = S(ImGuiKey_Enter, ImGuiKey_None, 0, 0, 0);
+        ret[(int)TextEditor::ShortcutID::AutocompleteUp]     = S(ImGuiKey_UpArrow,   ImGuiKey_None, 0, 0, 0);
+        ret[(int)TextEditor::ShortcutID::AutocompleteDown]   = S(ImGuiKey_DownArrow, ImGuiKey_None, 0, 0, 0);
+        ret[(int)TextEditor::ShortcutID::NewLine]            = S(ImGuiKey_Enter, ImGuiKey_None, 0, 0, 0);
+        ret[(int)TextEditor::ShortcutID::Indent]             = S(ImGuiKey_Tab,   ImGuiKey_None, 0, 0, 0);
+        ret[(int)TextEditor::ShortcutID::Unindent]           = S(ImGuiKey_Tab,   ImGuiKey_None, 0, 0, 1); // Shift+Tab
+        ret[(int)TextEditor::ShortcutID::Find]               = S(ImGuiKey_F, ImGuiKey_None, 1, 0, 0);
+        ret[(int)TextEditor::ShortcutID::Replace]            = S(ImGuiKey_H, ImGuiKey_None, 1, 0, 0);
+        ret[(int)TextEditor::ShortcutID::FindNext]           = S(ImGuiKey_F3, ImGuiKey_None, 0, 0, 0);
+        ret[(int)TextEditor::ShortcutID::DebugStep]          = S(ImGuiKey_F10, ImGuiKey_None, 0, 0, 0);
+        ret[(int)TextEditor::ShortcutID::DebugStepInto]      = S(ImGuiKey_F11, ImGuiKey_None, 0, 0, 0);
+        ret[(int)TextEditor::ShortcutID::DebugStepOut]       = S(ImGuiKey_F11, ImGuiKey_None, 0, 0, 1); // Shift+F11
+        ret[(int)TextEditor::ShortcutID::DebugContinue]      = S(ImGuiKey_F5,  ImGuiKey_None, 0, 0, 0);
+        ret[(int)TextEditor::ShortcutID::DebugStop]          = S(ImGuiKey_F5,  ImGuiKey_None, 0, 0, 1); // Shift+F5
+        ret[(int)TextEditor::ShortcutID::DebugBreakpoint]    = S(ImGuiKey_F9,  ImGuiKey_None, 0, 0, 0);
+        ret[(int)TextEditor::ShortcutID::DebugJumpHere]      = S(ImGuiKey_H, ImGuiKey_None, 1, 1, 0); // Ctrl+Alt+H
+        ret[(int)TextEditor::ShortcutID::DuplicateLine]      = S(ImGuiKey_D, ImGuiKey_None, 0, 1, 0); // Ctrl+D
+        ret[(int)TextEditor::ShortcutID::CommentLines]       = S(ImGuiKey_K, ImGuiKey_None, 0, 1, 1); // Ctrl+Shift+K
+        ret[(int)TextEditor::ShortcutID::UncommentLines]     = S(ImGuiKey_U, ImGuiKey_None, 0, 1, 1); // Ctrl+Shift+U
+#endif
+
+        return ret;
 }
 
 TextEditor::~TextEditor()
@@ -1180,52 +1268,71 @@ void TextEditor::HandleKeyboardInputs()
 			if (sct.Key1 == -1)
 				continue;
 				
-			ShortcutID curActionID = ShortcutID::Count;
-			bool additionalChecks = true;
-
-			SDL_Scancode sc1 = SDL_GetScancodeFromKey(sct.Key1);
-
-			if ((ImGui::IsKeyPressed(sc1) || (sc1 == SDL_SCANCODE_RETURN && ImGui::IsKeyPressed(SDL_SCANCODE_KP_ENTER))) && ((sct.Key2 != -1 && ImGui::IsKeyPressed(SDL_GetScancodeFromKey(sct.Key2))) || sct.Key2 == -1)) {
-				if ((sct.Ctrl == ctrl) && (sct.Alt == alt) && (sct.Shift == shift)) {
-
-					// PRESSED:
-					curActionID = (TextEditor::ShortcutID)i;
-					switch (curActionID) {
-						case ShortcutID::Paste:
-						case ShortcutID::Cut:
-						case ShortcutID::Redo: 
-						case ShortcutID::Undo:
-						case ShortcutID::ForwardDelete:
-						case ShortcutID::BackwardDelete:
-						case ShortcutID::DeleteLeft:
-						case ShortcutID::DeleteRight:
-						case ShortcutID::ForwardDeleteWord:
-						case ShortcutID::BackwardDeleteWord:
-							additionalChecks = !IsReadOnly();
-						break;
-						case ShortcutID::MoveUp:
-						case ShortcutID::MoveDown:
-						case ShortcutID::SelectUp:
-						case ShortcutID::SelectDown:
-							additionalChecks = !mACOpened;
-						break;
-						case ShortcutID::AutocompleteUp: 
-						case ShortcutID::AutocompleteDown:
-						case ShortcutID::AutocompleteSelect: 
-							additionalChecks = mACOpened;
-						break;
-						case ShortcutID::AutocompleteSelectActive: 
-							additionalChecks = mACOpened && mACSwitched;
-						break;
-						case ShortcutID::NewLine:
-						case ShortcutID::Indent:
-						case ShortcutID::Unindent:
-							additionalChecks = !IsReadOnly() && !mACOpened;
-						break;
-						default: break;
-					}
-				}
-			}
+                        ShortcutID curActionID = ShortcutID::Count;
+                        bool additionalChecks = true;
+                        bool isPressed = false;
+#if IMGUICTE_USE_SDL2
+                        SDL_Scancode sc1 = SDL_GetScancodeFromKey(sct.Key1);
+                        const bool pressed1 = ImGui::IsKeyPressed(sc1) || (sc1 == SDL_SCANCODE_RETURN && ImGui::IsKeyPressed(SDL_SCANCODE_KP_ENTER));
+                        const bool pressed2 = (sct.Key2 != -1) ? ImGui::IsKeyPressed(SDL_GetScancodeFromKey(sct.Key2)) : true;
+                        if (pressed1 && pressed2) {
+                                if (((sct.Ctrl == 0 && !ctrl) || (sct.Ctrl == 1 && ctrl) || (sct.Ctrl == 2)) &&
+                                        ((sct.Alt == 0 && !alt) || (sct.Alt == 1 && alt) || (sct.Alt == 2)) &&
+                                        ((sct.Shift == 0 && !shift) || (sct.Shift == 1 && shift) || (sct.Shift == 2)))
+                                        isPressed = true;
+                        }
+#else
+                        const ImGuiIO& io = ImGui::GetIO();
+                        const bool mods_ok =
+                                match_tristate_int(sct.Ctrl,  (io.KeyMods & ImGuiMod_Ctrl)  != 0) &&
+                                match_tristate_int(sct.Alt,   (io.KeyMods & ImGuiMod_Alt)   != 0) &&
+                                match_tristate_int(sct.Shift, (io.KeyMods & ImGuiMod_Shift) != 0);
+                        if (mods_ok) {
+                                const ImGuiKey k1 = (ImGuiKey)sct.Key1;
+                                const bool pressed1 = is_pressed_enter_or_kp(k1);
+                                const bool pressed2 = (sct.Key2 != -1) ? ImGui::IsKeyPressed((ImGuiKey)sct.Key2) : true;
+                                if (pressed1 && pressed2)
+                                        isPressed = true;
+                        }
+#endif
+                        if (isPressed) {
+                                // PRESSED:
+                                curActionID = (TextEditor::ShortcutID)i;
+                                switch (curActionID) {
+                                        case ShortcutID::Paste:
+                                        case ShortcutID::Cut:
+                                        case ShortcutID::Redo:
+                                        case ShortcutID::Undo:
+                                        case ShortcutID::ForwardDelete:
+                                        case ShortcutID::BackwardDelete:
+                                        case ShortcutID::DeleteLeft:
+                                        case ShortcutID::DeleteRight:
+                                        case ShortcutID::ForwardDeleteWord:
+                                        case ShortcutID::BackwardDeleteWord:
+                                                additionalChecks = !IsReadOnly();
+                                        break;
+                                        case ShortcutID::MoveUp:
+                                        case ShortcutID::MoveDown:
+                                        case ShortcutID::SelectUp:
+                                        case ShortcutID::SelectDown:
+                                                additionalChecks = !mACOpened;
+                                        break;
+                                        case ShortcutID::AutocompleteUp:
+                                        case ShortcutID::AutocompleteDown:
+                                        case ShortcutID::AutocompleteSelect:
+                                                additionalChecks = mACOpened;
+                                        break;
+                                        case ShortcutID::AutocompleteSelectActive:
+                                                additionalChecks = mACOpened && mACSwitched;
+                                        break;
+                                        case ShortcutID::NewLine:
+                                        case ShortcutID::Indent:
+                                        case ShortcutID::Unindent:
+                                                additionalChecks = !IsReadOnly() && !mACOpened;
+                                        break;
+                                        default: break;
+                                }
+                        }
 
 			if (additionalChecks && curActionID != ShortcutID::Count)
 				actionID = curActionID;
@@ -3291,16 +3398,33 @@ void TextEditor::Render(const char* aTitle, const ImVec2& aSize, bool aBorder)
 			if (sct.Key1 == -1)
 				continue;
 
-			SDL_Scancode sc1 = SDL_GetScancodeFromKey(sct.Key1);
-
-			if (ImGui::IsKeyPressed(sc1) && ((sct.Key2 != -1 && ImGui::IsKeyPressed(SDL_GetScancodeFromKey(sct.Key2))) || sct.Key2 == -1)) {
-				if (((sct.Ctrl == 0 && !ctrl) || (sct.Ctrl == 1 && ctrl) || (sct.Ctrl == 2)) &&		// ctrl check
-					((sct.Alt == 0 && !alt) || (sct.Alt == 1 && alt) || (sct.Alt == 2)) &&			// alt check
-					((sct.Shift == 0 && !shift) || (sct.Shift == 1 && shift) || (sct.Shift == 2))) {// shift check
-				
-					curActionID = (TextEditor::ShortcutID)i;
-				}
-			}
+                        bool pressed = false;
+#if IMGUICTE_USE_SDL2
+                        SDL_Scancode sc1 = SDL_GetScancodeFromKey(sct.Key1);
+                        const bool pressed1 = ImGui::IsKeyPressed(sc1);
+                        const bool pressed2 = (sct.Key2 != -1) ? ImGui::IsKeyPressed(SDL_GetScancodeFromKey(sct.Key2)) : true;
+                        if (pressed1 && pressed2) {
+                                if (((sct.Ctrl == 0 && !ctrl) || (sct.Ctrl == 1 && ctrl) || (sct.Ctrl == 2)) &&
+                                        ((sct.Alt == 0 && !alt) || (sct.Alt == 1 && alt) || (sct.Alt == 2)) &&
+                                        ((sct.Shift == 0 && !shift) || (sct.Shift == 1 && shift) || (sct.Shift == 2)))
+                                        pressed = true;
+                        }
+#else
+                        const bool mods_ok =
+                                match_tristate_int(sct.Ctrl,  (io.KeyMods & ImGuiMod_Ctrl)  != 0) &&
+                                match_tristate_int(sct.Alt,   (io.KeyMods & ImGuiMod_Alt)   != 0) &&
+                                match_tristate_int(sct.Shift, (io.KeyMods & ImGuiMod_Shift) != 0);
+                        if (mods_ok) {
+                                const ImGuiKey k1 = (ImGuiKey)sct.Key1;
+                                const bool pressed1 = ImGui::IsKeyPressed(k1);
+                                const bool pressed2 = (sct.Key2 != -1) ? ImGui::IsKeyPressed((ImGuiKey)sct.Key2) : true;
+                                if (pressed1 && pressed2)
+                                        pressed = true;
+                        }
+#endif
+                        if (pressed) {
+                                curActionID = (TextEditor::ShortcutID)i;
+                        }
 		}
 		mFindNext = curActionID == TextEditor::ShortcutID::FindNext;
 
