@@ -302,6 +302,9 @@ public:
         static const LanguageDefinition& SQL();
         static const LanguageDefinition& AngelScript();
         static const LanguageDefinition& Lua();
+        static const LanguageDefinition& JSON();
+        static const LanguageDefinition& JSONC();
+        static const LanguageDefinition& JSONWithHash();
 
     private:
         static void m_HLSLDocumentation(Identifiers& idents);

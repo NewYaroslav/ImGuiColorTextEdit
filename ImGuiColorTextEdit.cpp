@@ -6730,3 +6730,92 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::Lua()
     }
     return langDef;
 }
+
+const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::JSON()
+{
+    static bool inited = false;
+    static LanguageDefinition langDef;
+    if (!inited)
+    {
+        static const char* const keywords[] = {
+            "true", "false", "null"
+        };
+        for (auto& k : keywords)
+            langDef.mKeywords.insert(k);
+
+        langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("L?\\\"(\\\\.|[^\\\"])*\\\"", PaletteIndex::String));
+        langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?", PaletteIndex::Number));
+        langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[a-zA-Z_][a-zA-Z0-9_]*", PaletteIndex::Identifier));
+        langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[\\[\\]\\{\\}\\:\,]", PaletteIndex::Punctuation));
+
+        langDef.mCaseSensitive = true;
+        langDef.mAutoIndentation = true;
+
+        langDef.mName = "JSON";
+
+        inited = true;
+    }
+    return langDef;
+}
+
+const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::JSONC()
+{
+    static bool inited = false;
+    static LanguageDefinition langDef;
+    if (!inited)
+    {
+        static const char* const keywords[] = {
+            "true", "false", "null"
+        };
+        for (auto& k : keywords)
+            langDef.mKeywords.insert(k);
+
+        langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("L?\\\"(\\\\.|[^\\\"])*\\\"", PaletteIndex::String));
+        langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?", PaletteIndex::Number));
+        langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[a-zA-Z_][a-zA-Z0-9_]*", PaletteIndex::Identifier));
+        langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[\\[\\]\\{\\}\\:\,]", PaletteIndex::Punctuation));
+
+        langDef.block_comments.push_back(std::make_pair("/*","*/"));
+        langDef.single_line_comments.push_back("//");
+
+        langDef.mCaseSensitive = true;
+        langDef.mAutoIndentation = true;
+
+        langDef.mName = "JSONC";
+
+        inited = true;
+    }
+    return langDef;
+}
+
+const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::JSONWithHash()
+{
+    static bool inited = false;
+    static LanguageDefinition langDef;
+    if (!inited)
+    {
+        static const char* const keywords[] = {
+            "true", "false", "null"
+        };
+        for (auto& k : keywords)
+            langDef.mKeywords.insert(k);
+
+        langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("L?\\\"(\\\\.|[^\\\"])*\\\"", PaletteIndex::String));
+        langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?", PaletteIndex::Number));
+        langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[a-zA-Z_][a-zA-Z0-9_]*", PaletteIndex::Identifier));
+        langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[\\[\\]\\{\\}\\:\,]", PaletteIndex::Punctuation));
+
+        langDef.block_comments.push_back(std::make_pair("/*","*/"));
+        langDef.single_line_comments.push_back("//");
+        langDef.single_line_comments.push_back("#");
+        langDef.mPreprocChar = '\0';
+
+        langDef.mCaseSensitive = true;
+        langDef.mAutoIndentation = true;
+
+        langDef.mName = "JSONWithHash";
+
+        inited = true;
+    }
+    return langDef;
+}
