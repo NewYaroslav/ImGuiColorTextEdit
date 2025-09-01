@@ -1,5 +1,6 @@
 # ImGuiColorTextEdit
 Syntax highlighting text editor for ImGui
+Compatible with Dear ImGui 1.92 and later.
 
 ![Screenshot](https://github.com/BalazsJako/ImGuiColorTextEdit/wiki/ImGuiTextEdit.png "Screenshot")
 
