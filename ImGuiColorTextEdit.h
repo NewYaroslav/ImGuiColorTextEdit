@@ -259,6 +259,15 @@ namespace ImTextEdit {
     const LanguageDefinition& JSONC();
     const LanguageDefinition& JSONWithHash();
 
+    enum class DebugAction
+    {
+        Step,
+        StepInto,
+        StepOut,
+        Continue,
+        Stop
+    };
+
 /// \brief Interactive text editor with syntax highlighting for ImGui.
 /// \note Right-to-left scripts and complex text shaping are not supported.
 class TextEditor {
@@ -505,25 +514,6 @@ public:
         mACEntrySearch.push_back(search);
         mACEntries.push_back(std::make_pair(display, value));
     }
-
-    /// \brief Retrieve default keyboard shortcuts.
-    static const std::vector<Shortcut> GetDefaultShortcuts();
-    /// \brief Get built-in dark color palette.
-    static const Palette& GetDarkPalette();
-    /// \brief Get built-in light color palette.
-    static const Palette& GetLightPalette();
-    /// \brief Get built-in retro blue color palette.
-    static const Palette& GetRetroBluePalette();
-
-    enum class DebugAction
-    {
-        Step,
-        StepInto,
-        StepOut,
-        Continue,
-        Stop
-    };
-
     std::function<void(TextEditor*, int)> OnDebuggerJump;
     std::function<void(TextEditor*, DebugAction)> OnDebuggerAction;
     std::function<void(TextEditor*, const std::string&)> OnIdentifierHover;
@@ -771,5 +761,14 @@ private:
 
     float mLastClick;
 };
+
+/// \brief Retrieve default keyboard shortcuts.
+const std::vector<Shortcut> GetDefaultShortcuts();
+/// \brief Get built-in dark color palette.
+const TextEditor::Palette& GetDarkPalette();
+/// \brief Get built-in light color palette.
+const TextEditor::Palette& GetLightPalette();
+/// \brief Get built-in retro blue color palette.
+const TextEditor::Palette& GetRetroBluePalette();
 
 } // namespace ImTextEdit
