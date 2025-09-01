@@ -6835,4 +6835,62 @@ const LanguageDefinition& JSONWithHash() {
     return langDef;
 }
 
+const LanguageDefinition& JSON5() {
+    static bool inited = false;
+    static LanguageDefinition langDef;
+    if (!inited) {
+        // JSON literals as keywords (true/false/null); JSON5 keeps them
+        static const char* const keywords[] = { "true", "false", "null" };
+        for (auto& k : keywords)
+            langDef.mKeywords.insert(k);
+
+        // --- Strings ---
+        // Double-quoted string: " ... ", with escapes (\" \\ \u....) and line continuation (\\\r?\n)
+        langDef.mTokenRegexStrings.emplace_back(
+            R"("([^"\\]|\\.|\\\r?\n)*")", PaletteIndex::String);
+        // Single-quoted string: ' ... ', same rules as above
+        langDef.mTokenRegexStrings.emplace_back(
+            R"('([^'\\]|\\.|\\\r?\n)*')", PaletteIndex::String);
+
+        // --- Numbers (JSON5) ---
+        // Hex integer: 0x..., optional sign
+        langDef.mTokenRegexStrings.emplace_back(
+            R"([+-]?0[xX][0-9A-Fa-f]+)", PaletteIndex::Number);
+        // Infinity (optional sign)
+        langDef.mTokenRegexStrings.emplace_back(
+            R"([+-]?Infinity)", PaletteIndex::Number);
+        // NaN (optional sign)
+        langDef.mTokenRegexStrings.emplace_back(
+            R"([+-]?NaN)", PaletteIndex::Number);
+        // Decimal: +1, -1, 1., .5, 1.0, 1e-3, .5E+2, etc.
+        langDef.mTokenRegexStrings.emplace_back(
+            R"([+-]?((\d+(\.\d*)?)|(\.\d+))([eE][+-]?\d+)?)", PaletteIndex::Number);
+
+        // --- Identifiers (unquoted keys) ---
+        // Subset of ECMAScript IdentifierName:
+        //   Start:  [A-Za-z_$] or \uXXXX
+        //   Part:   [A-Za-z0-9_$] or \uXXXX
+        // Capturing groups used (ECMAScript has no (?:...))
+        langDef.mTokenRegexStrings.emplace_back(
+            R"((\\u[0-9A-Fa-f]{4}|[A-Za-z_$])(\\u[0-9A-Fa-f]{4}|[A-Za-z0-9_$])*)",
+            PaletteIndex::Identifier);
+
+        // --- Punctuation ---
+        // JSON/JSON5 delimiters (trailing commas allowed at syntax level)
+        langDef.mTokenRegexStrings.emplace_back(
+            R"([\[\]{}:,])", PaletteIndex::Punctuation);
+
+        // --- Comments (JSON5 allows both) ---
+        langDef.block_comments.emplace_back("/*", "*/");
+        langDef.single_line_comments.emplace_back("//");
+
+        langDef.mCaseSensitive   = true;
+        langDef.mAutoIndentation = true;
+        langDef.mName            = "JSON5";
+
+        inited = true;
+    }
+    return langDef;
+}
+
 } // namespace ImTextEdit

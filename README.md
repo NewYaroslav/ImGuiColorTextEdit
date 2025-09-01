@@ -50,6 +50,7 @@ The code is (still) work in progress, please report if you find any issues.
 | Lua | `const LanguageDefinition& Lua();` |
 | JSON | `const LanguageDefinition& JSON();` |
 | JSONC | `const LanguageDefinition& JSONC();` |
+| JSON5        | `const LanguageDefinition& JSON5();`        |
 | JSONWithHash | `const LanguageDefinition& JSONWithHash();` |
 
 # JSON editor example
